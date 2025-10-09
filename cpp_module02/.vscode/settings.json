@@ -1,0 +1,14 @@
+{
+    "editor.autoIndent": "full",
+    "editor.tabSize": 4,
+    "editor.detectIndentation": false,
+
+    "[c]": {
+        "editor.insertSpaces": false,
+        "editor.tabSize": 4
+    },
+    "[cpp]": {
+        "editor.insertSpaces": false,
+        "editor.tabSize": 4
+    }
+}

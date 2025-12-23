@@ -1,28 +1,28 @@
-CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98
-NAME = phoneBook
+CXX=c++
+CXXFLAGS=-Wall -Wextra -Werror
+# compute include path from LIB_DIR (prefers include/, then inc/, then lib dir)
+INC := $(shell if [ -d "$(LIB_DIR)/include" ]; then echo -I$(LIB_DIR)/include; elif [ -d "$(LIB_DIR)/inc" ]; then echo -I$(LIB_DIR)/inc; else echo -I$(LIB_DIR); fi)
+LDFLAGS=
+LIB_DIR=/mnt/c/Users/dylan/Shared/picine_cpp/libcpp
+LIBS=-lcpp
+SRC=Contact.cpp main.cpp PhoneBook.cpp 
+OBJ=$(SRC:.cpp=.o)
+TARGET=ex01
 
-SRCS = main.c Contact.cpp PhoneBook.cpp
-OBJS = $(SRCS:.cpp=.o)
-OBJS := $(OBJS:.c=.o)
+all: $(TARGET)
 
-all: $(NAME)
-
-$(NAME): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $(NAME) $(OBJS)
+$(TARGET): $(OBJ)
+	$(MAKE) -C $(LIB_DIR)
+	$(CXX) $(CXXFLAGS) $(INC) $(OBJ) -o $(TARGET) -L$(LIB_DIR) $(LDFLAGS) $(LIBS)
 
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-# compile .c as C++ source
-%.o: %.c
-	$(CXX) $(CXXFLAGS) -x c++ -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
 clean:
-	rm -f $(OBJS)
+	rm -f $(OBJ)
 
 fclean: clean
-	rm -f $(NAME)
+	rm -f $(TARGET)
 
 re: fclean all
 

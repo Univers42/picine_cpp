@@ -22,6 +22,11 @@
 #include <iomanip>
 #include <algorithm>
 #include <stdint.h>
+#include <cctype>   // <--- added for tolower
+#include "ft_string.hpp" // use Unicode-aware case helpers from ft_string.cpp
+
+// Forward declare strcase_toggle (defined in ft_string.cpp)
+void strcase_toggle(std::string *s, int mod);
 
 // ============================================================================
 // UNICODE UTILITIES
@@ -405,14 +410,18 @@ struct RenderConfig {
     Style::CellStyle headerStyle;
     Style::CellStyle cellStyle;
     Style::CellStyle footerStyle;
+    Style::CellStyle borderStyle; // new: style for borders / box chars
     bool showHeader;
     bool showFooter;
     std::string footerText;
     int padding;
     bool autoWidth;
 
+    // NEW: auto-increment ID behavior when loading CSV
+    bool autoIncrementId;
     RenderConfig() : boxChars(), headerStyle(), cellStyle(), footerStyle(), showHeader(true),
-                     showFooter(false), footerText(""), padding(1), autoWidth(true) {
+                     showFooter(false), footerText(""), padding(1), autoWidth(true),
+                     autoIncrementId(true) {  // <-- changed to true by default
         headerStyle.bold = true;
         headerStyle.foreground = Style::Color::BrightCyan();
     }
@@ -423,6 +432,7 @@ struct RenderConfig {
         cfg.headerStyle.bold = true;
         cfg.headerStyle.foreground = Style::Color::BrightWhite();
         cfg.headerStyle.background = Style::Color(44);
+        cfg.borderStyle.foreground = Style::Color::BrightWhite();
         return cfg;
     }
 
@@ -430,6 +440,7 @@ struct RenderConfig {
         RenderConfig cfg;
         cfg.padding = 0;
         cfg.headerStyle.bold = true;
+        cfg.borderStyle.foreground = Style::Color::Default();
         return cfg;
     }
 };
@@ -473,25 +484,32 @@ public:
 private:
     RenderConfig _config;
     std::ostringstream _buffer;
+
+    // helper to output a box character (styled)
+    void putBorder(const std::string& s) {
+        // apply border style around the given string
+        _buffer << _config.borderStyle.apply(s);
+    }
     
     void renderTopBorder(const Table& table) {
-        _buffer << _config.boxChars.topLeft;
+        putBorder(_config.boxChars.topLeft);
 
         const std::vector<Column>& cols = table.columns();
         for (size_t i = 0; i < cols.size(); ++i) {
             size_t width = cols[i].width() + 2 * _config.padding;
-            _buffer << repeat(_config.boxChars.horizontal, width);
+            putBorder(repeat(_config.boxChars.horizontal, width));
 
             if (i < cols.size() - 1) {
-                _buffer << _config.boxChars.teeTop;
+                putBorder(_config.boxChars.teeTop);
             }
         }
 
-        _buffer << _config.boxChars.topRight << "\n";
+        putBorder(_config.boxChars.topRight);
+        _buffer << "\n";
     }
     
     void renderHeader(const Table& table) {
-        _buffer << _config.boxChars.vertical;
+        putBorder(_config.boxChars.vertical);
 
         const std::vector<Column>& cols = table.columns();
         for (size_t i = 0; i < cols.size(); ++i) {
@@ -500,26 +518,27 @@ private:
             _buffer << repeat(" ", _config.padding);
             _buffer << _config.headerStyle.apply(content);
             _buffer << repeat(" ", _config.padding);
-            _buffer << _config.boxChars.vertical;
+            putBorder(_config.boxChars.vertical);
         }
 
         _buffer << "\n";
     }
 
     void renderHeaderSeparator(const Table& table) {
-        _buffer << _config.boxChars.teeLeft;
+        putBorder(_config.boxChars.teeLeft);
 
         const std::vector<Column>& cols = table.columns();
         for (size_t i = 0; i < cols.size(); ++i) {
             size_t width = cols[i].width() + 2 * _config.padding;
-            _buffer << repeat(_config.boxChars.horizontal, width);
+            putBorder(repeat(_config.boxChars.horizontal, width));
 
             if (i < cols.size() - 1) {
-                _buffer << _config.boxChars.cross;
+                putBorder(_config.boxChars.cross);
             }
         }
 
-        _buffer << _config.boxChars.teeRight << "\n";
+        putBorder(_config.boxChars.teeRight);
+        _buffer << "\n";
     }
     
     void renderRows(const Table& table) {
@@ -527,7 +546,7 @@ private:
         const std::vector<Row>& rows = table.rows();
 
         for (size_t r = 0; r < rows.size(); ++r) {
-            _buffer << _config.boxChars.vertical;
+            putBorder(_config.boxChars.vertical);
 
             for (size_t c = 0; c < cols.size(); ++c) {
                 std::string value = cols[c].format(rows[r].getValue(cols[c].name()));
@@ -536,7 +555,7 @@ private:
                 _buffer << repeat(" ", _config.padding);
                 _buffer << _config.cellStyle.apply(content);
                 _buffer << repeat(" ", _config.padding);
-                _buffer << _config.boxChars.vertical;
+                putBorder(_config.boxChars.vertical);
             }
 
             _buffer << "\n";
@@ -544,23 +563,24 @@ private:
     }
     
     void renderFooterSeparator(const Table& table) {
-        _buffer << _config.boxChars.teeLeft;
+        putBorder(_config.boxChars.teeLeft);
 
         const std::vector<Column>& cols = table.columns();
         for (size_t i = 0; i < cols.size(); ++i) {
             size_t width = cols[i].width() + 2 * _config.padding;
-            _buffer << repeat(_config.boxChars.horizontal, width);
+            putBorder(repeat(_config.boxChars.horizontal, width));
 
             if (i < cols.size() - 1) {
-                _buffer << _config.boxChars.cross;
+                putBorder(_config.boxChars.cross);
             }
         }
 
-        _buffer << _config.boxChars.teeRight << "\n";
+        putBorder(_config.boxChars.teeRight);
+        _buffer << "\n";
     }
     
     void renderFooter(const Table& table) {
-        _buffer << _config.boxChars.vertical;
+        putBorder(_config.boxChars.vertical);
 
         size_t totalWidth = 0;
         const std::vector<Column>& cols = table.columns();
@@ -571,23 +591,25 @@ private:
 
         std::string content = Unicode::pad(_config.footerText, totalWidth - 2, 'c');
         _buffer << " " << _config.footerStyle.apply(content) << " ";
-        _buffer << _config.boxChars.vertical << "\n";
+        putBorder(_config.boxChars.vertical);
+        _buffer << "\n";
     }
     
     void renderBottomBorder(const Table& table) {
-        _buffer << _config.boxChars.bottomLeft;
+        putBorder(_config.boxChars.bottomLeft);
 
         const std::vector<Column>& cols = table.columns();
         for (size_t i = 0; i < cols.size(); ++i) {
             size_t width = cols[i].width() + 2 * _config.padding;
-            _buffer << repeat(_config.boxChars.horizontal, width);
+            putBorder(repeat(_config.boxChars.horizontal, width));
 
             if (i < cols.size() - 1) {
-                _buffer << _config.boxChars.teeBottom;
+                putBorder(_config.boxChars.teeBottom);
             }
         }
 
-        _buffer << _config.boxChars.bottomRight << "\n";
+        putBorder(_config.boxChars.bottomRight);
+        _buffer << "\n";
     }
     
     std::string repeat(const std::string& s, size_t n) {
@@ -605,7 +627,7 @@ private:
 
 class CsvParser {
 public:
-    static Table parse(const std::string& path, bool hasHeader = true) {
+    static Table parse(const std::string& path, bool hasHeader = true, const RenderConfig& cfg = RenderConfig()) {
         Table table;
         std::ifstream file;
         file.open(path.c_str());
@@ -617,28 +639,61 @@ public:
         bool isFirstLine = true;
         std::vector<std::string> headers;
 
+        bool insertedIdColumn = false;
+        size_t nextAutoId = 1;
+
         while (std::getline(file, line)) {
             std::vector<std::string> fields = parseLine(line);
 
             if (isFirstLine && hasHeader) {
                 headers = fields;
+                // detect existing ID header (case-insensitive, Unicode-aware)
+                bool hasId = false;
+                for (size_t i = 0; i < headers.size(); ++i) {
+                    std::string htmp = headers[i];
+                    strcase_toggle(&htmp, 1); // to lower (mod==1)
+                    if (htmp == "id") { hasId = true; break; }
+                }
+                // if requested, auto-insert ID as first column
+                if (cfg.autoIncrementId && !hasId) {
+                    headers.insert(headers.begin(), std::string("ID"));
+                    insertedIdColumn = true;
+                }
                 for (size_t i = 0; i < headers.size(); ++i) {
                     table.addColumn(Column(headers[i]));
                 }
                 isFirstLine = false;
             } else {
                 if (headers.empty()) {
+                    // no header provided: create Column1..N; optionally prepend ID
                     for (size_t i = 0; i < fields.size(); ++i) {
                         std::ostringstream oss;
                         oss << (i + 1);
                         headers.push_back(std::string("Column") + oss.str());
-                        table.addColumn(Column(headers.back()));
+                    }
+                    if (cfg.autoIncrementId) {
+                        headers.insert(headers.begin(), std::string("ID"));
+                        insertedIdColumn = true;
+                    }
+                    for (size_t i = 0; i < headers.size(); ++i) {
+                        table.addColumn(Column(headers[i]));
                     }
                 }
 
                 Row row;
-                for (size_t i = 0; i < fields.size() && i < headers.size(); ++i) {
-                    row.setValue(headers[i], fields[i]);
+                size_t fi = 0;
+                if (insertedIdColumn) {
+                    std::ostringstream idss;
+                    idss << nextAutoId++;
+                    row.setValue(headers[0], idss.str());
+                    // fill fields starting at headers[1]
+                    for (size_t i = 1; i < headers.size() && fi < fields.size(); ++i, ++fi) {
+                        row.setValue(headers[i], fields[fi]);
+                    }
+                } else {
+                    for (size_t i = 0; i < fields.size() && i < headers.size(); ++i) {
+                        row.setValue(headers[i], fields[i]);
+                    }
                 }
                 table.addRow(row);
             }
@@ -691,8 +746,8 @@ class Database {
 public:
     Database() {}
 
-    void loadFromCsv(const std::string& path, bool hasHeader = true) {
-        _table = CsvParser::parse(path, hasHeader);
+    void loadFromCsv(const std::string& path, bool hasHeader = true, const RenderConfig& cfg = RenderConfig()) {
+        _table = CsvParser::parse(path, hasHeader, cfg);
     }
 
     void addColumn(const std::string& name, ColumnType::Type type = ColumnType::STRING,

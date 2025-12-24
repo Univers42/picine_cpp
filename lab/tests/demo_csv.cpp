@@ -2,6 +2,7 @@
 #include "colors.hpp"
 #include "csv.hpp"
 #include <iostream>
+#include <sstream> // added for C++98-safe number -> string conversion
 #include <string>
 
 int main(int argc, char** argv) {
@@ -61,6 +62,45 @@ int main(int argc, char** argv) {
             } else {
                 std::cerr << "CSV load error: " << doc.error() << "\n";
             }
+        }
+
+        // Test runner for RenderConfig variations
+        {
+            std::cout << "\n--- Default render ---\n";
+            std::cout << db.render();
+
+            // 1) Header color + heavy border
+            RenderConfig cfg1 = RenderConfig::elegant();
+            cfg1.boxChars = Unicode::BoxChars::heavy();
+            cfg1.headerStyle.foreground = Style::Color::BrightMagenta();
+            cfg1.headerStyle.background = Style::Color::Default();
+            cfg1.borderStyle.foreground = Style::Color::BrightBlue();
+            std::cout << "\n--- Header colored, border bright blue ---\n";
+            std::cout << db.render(cfg1);
+
+            // 2) Cell foreground + border + header background
+            RenderConfig cfg2 = RenderConfig::elegant();
+            cfg2.cellStyle.foreground = Style::Color::BrightGreen();
+            cfg2.headerStyle.background = Style::Color(44); // cyan bg
+            cfg2.borderStyle.foreground = Style::Color::BrightYellow();
+            cfg2.boxChars = Unicode::BoxChars::doubleLine();
+            std::cout << "\n--- Cell fg bright green, header bg, border bright yellow ---\n";
+            std::cout << db.render(cfg2);
+
+            // 3) Footer and padding demo
+            RenderConfig cfg3 = RenderConfig::elegant();
+            cfg3.showFooter = true;
+            // build footer text without std::to_string (C++98)
+            std::ostringstream footer_ss;
+            footer_ss << "Loaded " << db.count()
+                      << " rows × " << db.table().columnCount()
+                      << " columns — demo CSV with Unicode & emoji";
+            cfg3.footerText = footer_ss.str();
+            cfg3.borderStyle.foreground = Style::Color::BrightCyan();
+            cfg3.boxChars = Unicode::BoxChars::doubleLine();
+            cfg3.padding = 1;
+            std::cout << "\n--- Footer, border cyan ---\n";
+            std::cout << db.render(cfg3);
         }
 
     } catch (const std::exception& ex) {

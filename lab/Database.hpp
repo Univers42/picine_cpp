@@ -372,7 +372,9 @@ public:
     const std::vector<Column>& columns() const { return _columns; }
     std::vector<Column>& columns() { return _columns; }
     const std::vector<Row>& rows() const { return _rows; }
-
+    // NEW: non-const rows accessor so callers can modify rows (REPL/queries)
+    std::vector<Row>& rows() { return _rows; }
+    
     void clear() {
         _rows.clear();
     }

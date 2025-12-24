@@ -38,6 +38,10 @@ $(OBJDIR)/%.o: %.cpp | $(OBJDIR)
 $(BINDIR)/%: $(OBJDIR)/%.o $(ROOT_OBJS) | $(BINDIR)
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
+# Special rule for repl: link with readline
+$(BINDIR)/repl: $(OBJDIR)/repl.o $(ROOT_OBJS) | $(BINDIR)
+	$(CXX) $(CXXFLAGS) $^ -lreadline -o $@
+
 # Remove object files
 clean:
 	rm -rf $(OBJDIR)

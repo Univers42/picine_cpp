@@ -1,112 +1,100 @@
-#include "Database.hpp"
-#include "colors.hpp"
-#include "csv.hpp"
+#include "../Database.hpp"
 #include <iostream>
-#include <sstream> // added for C++98-safe number -> string conversion
-#include <string>
+#include <sstream>
 
 int main(int argc, char** argv) {
-    try {
-        if (argc < 2) {
-            std::cerr << "Usage: " << (argc ? argv[0] : "demo_csv") << " <path-to-csv>\n";
-            return 1;
-        }
-        const std::string path = argv[1];
-        Database db;
-        db.loadFromCsv(path, true);
+	if (argc < 2) {
+		std::cerr << "Usage: demo_csv <csv-path>\n";
+		return 1;
+	}
+	std::string path = argv[1];
 
-        // Adjust alignments for readability
-        std::vector<Column>& cols = db.table().columns();
-        for (size_t i = 0; i < cols.size(); ++i) {
-            const std::string& name = cols[i].name();
-            if (name == "ID" || name == "Score") cols[i] = Column(name, cols[i].type(), Alignment::RIGHT);
-            else if (name == "Emoji" || name == "Active") cols[i] = Column(name, cols[i].type(), Alignment::CENTER);
-            else cols[i] = Column(name, cols[i].type(), Alignment::LEFT);
-        }
+	try {
+		Database db;
+		// load (autoIncrementId enabled by default)
+		db.loadFromCsv(path, true);
 
-        // Configure rendering with RGB-inspired colors (approximate via Style::Color::RGB)
-        RenderConfig cfg = RenderConfig::elegant();
-        cfg.padding = 1;
-        cfg.showFooter = true;
+		std::cout << "\n--- DEFAULT ---\n";
+		std::cout << db.render();
 
-        // header: warm gradient-ish via RGB approx
-        cfg.headerStyle.foreground = Style::Color::RGB(255, 215, 64); // warm light
-        cfg.headerStyle.background = Style::Color::RGB(20, 30, 40);  // dark slate
-        cfg.headerStyle.bold = true;
+		// Elegant heavy border + header color + footer (fits)
+		{
+			RenderConfig cfg = RenderConfig::elegant();
+			cfg.boxChars = Unicode::BoxChars::heavy();
+			cfg.headerStyle.foreground = Style::Color::BrightMagenta();
+			cfg.headerStyle.bold = true;
+			cfg.borderStyle.foreground = Style::Color::BrightBlue();
+			cfg.showFooter = true;
+			{
+				std::ostringstream ss;
+				ss << "Loaded " << db.count() << " rows × " << db.table().columnCount() << " columns";
+				cfg.footerText = ss.str();
+			}
+			cfg.footerStyle.foreground = Style::Color::BrightYellow();
+			std::cout << "\n--- ELEGANT + HEAVY BORDER + FOOTER ---\n";
+			std::cout << db.render(cfg);
+		}
 
-        // cells: subtle default foreground, no background
-        cfg.cellStyle.foreground = Style::Color::Default();
-        cfg.cellStyle.background = Style::Color(49);
-        cfg.cellStyle.bold = false;
+		// Body background + body foreground + even/odd stripe + value coloring
+		{
+			RenderConfig cfg;
+			cfg.boxChars = Unicode::BoxChars::doubleLine();
+			cfg.borderStyle.foreground = Style::Color::BrightWhite();
+			cfg.cellStyle.foreground = Style::Color::BrightBlack();
 
-        // footer
-        {
-            std::ostringstream oss;
-            oss << "Loaded " << db.table().rowCount() << " rows × " << db.table().columnCount() << " columns — demo CSV with Unicode & emoji";
-            cfg.footerText = oss.str();
-            cfg.footerStyle.foreground = Style::Color::RGB(180,180,255);
-            cfg.footerStyle.bold = true;
-        }
+			// body-level foreground and background: white background + subtle green stripe
+			cfg.color_body = Style::Color::BrightBlack();      // body text color
+			cfg.body_background = Style::Color(47);            // ANSI 47 = white background
+			cfg.even_background = Style::Color(102);           // ANSI 102 = bright green background (subtle stripe)
+			cfg.odd_background  = Style::Color(47);            // keep odd rows white
 
-        // Print rendered table
-        std::cout << db.render(cfg) << std::endl;
+			// value-based coloring for booleans (keys must be lowercase)
+			Style::CellStyle trueStyle;
+			trueStyle.foreground = Style::Color::BrightGreen();
+			trueStyle.bold = true;
+			cfg.value_styles["true"] = trueStyle;
 
-        // Additionally show CSV::Document demo: raw parse + aggregate sample
-        {
-            CSV::Document doc;
-            if (doc.load(path)) {
-                std::cout << "\nSimple CSV stats (using CSV::Aggregate):\n";
-                std::cout << " - Rows: " << doc.rowCount() << "\n";
-                double avg = CSV::Aggregate::average(doc, "Score");
-                std::cout << " - Average Score: " << avg << "\n";
-            } else {
-                std::cerr << "CSV load error: " << doc.error() << "\n";
-            }
-        }
+			Style::CellStyle falseStyle;
+			falseStyle.foreground = Style::Color::BrightRed();
+			falseStyle.bold = true;
+			cfg.value_styles["false"] = falseStyle;
 
-        // Test runner for RenderConfig variations
-        {
-            std::cout << "\n--- Default render ---\n";
-            std::cout << db.render();
+			cfg.padding = 1;
+			std::cout << "\n--- BODY BACKGROUND + STRIPES + VALUE COLORS ---\n";
+			std::cout << db.render(cfg);
+		}
 
-            // 1) Header color + heavy border
-            RenderConfig cfg1 = RenderConfig::elegant();
-            cfg1.boxChars = Unicode::BoxChars::heavy();
-            cfg1.headerStyle.foreground = Style::Color::BrightMagenta();
-            cfg1.headerStyle.background = Style::Color::Default();
-            cfg1.borderStyle.foreground = Style::Color::BrightBlue();
-            std::cout << "\n--- Header colored, border bright blue ---\n";
-            std::cout << db.render(cfg1);
+		// Per-column color overrides (Score highlighted)
+		{
+			RenderConfig cfg = RenderConfig::minimal();
+			cfg.boxChars = Unicode::BoxChars::doubleLine();
+			cfg.borderStyle.foreground = Style::Color::Default();
+			cfg.color_column["Score"] = Style::Color::BrightYellow();
+			cfg.color_column["Name"]  = Style::Color::BrightCyan();
+			cfg.padding = 1;
+			std::cout << "\n--- PER-COLUMN COLORS (Score, Name) ---\n";
+			std::cout << db.render(cfg);
+		}
 
-            // 2) Cell foreground + border + header background
-            RenderConfig cfg2 = RenderConfig::elegant();
-            cfg2.cellStyle.foreground = Style::Color::BrightGreen();
-            cfg2.headerStyle.background = Style::Color(44); // cyan bg
-            cfg2.borderStyle.foreground = Style::Color::BrightYellow();
-            cfg2.boxChars = Unicode::BoxChars::doubleLine();
-            std::cout << "\n--- Cell fg bright green, header bg, border bright yellow ---\n";
-            std::cout << db.render(cfg2);
+		// Very long footer printed outside table
+		{
+			RenderConfig cfg = RenderConfig::elegant();
+			cfg.boxChars = Unicode::BoxChars::doubleLine();
+			cfg.borderStyle.foreground = Style::Color::BrightCyan();
+			cfg.showFooter = true;
+			std::ostringstream ss;
+			ss << "Loaded " << db.count() << " rows × " << db.table().columnCount()
+			   << " columns — this is a very long footer that should be printed outside the table to avoid misalignment and demonstrate footer placement behavior";
+			cfg.footerText = ss.str();
+			cfg.footerStyle.foreground = Style::Color::BrightGreen();
+			std::cout << "\n--- LONG FOOTER (outside table) ---\n";
+			std::cout << db.render(cfg);
+		}
 
-            // 3) Footer and padding demo
-            RenderConfig cfg3 = RenderConfig::elegant();
-            cfg3.showFooter = true;
-            // build footer text without std::to_string (C++98)
-            std::ostringstream footer_ss;
-            footer_ss << "Loaded " << db.count()
-                      << " rows × " << db.table().columnCount()
-                      << " columns — demo CSV with Unicode & emoji";
-            cfg3.footerText = footer_ss.str();
-            cfg3.borderStyle.foreground = Style::Color::BrightCyan();
-            cfg3.boxChars = Unicode::BoxChars::doubleLine();
-            cfg3.padding = 1;
-            std::cout << "\n--- Footer, border cyan ---\n";
-            std::cout << db.render(cfg3);
-        }
+	} catch (const std::exception& e) {
+		std::cerr << "Error: " << e.what() << "\n";
+		return 2;
+	}
 
-    } catch (const std::exception& ex) {
-        std::cerr << "Error: " << ex.what() << "\n";
-        return 1;
-    }
-
-    return 0;
+	return 0;
 }

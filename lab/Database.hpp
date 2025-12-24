@@ -405,6 +405,14 @@ private:
 // RENDER CONFIGURATION
 // ============================================================================
 
+enum TableStyle {
+	TABLE_STYLE_LIGHT = 0,
+	TABLE_STYLE_HEAVY,
+	TABLE_STYLE_DOUBLE,
+	TABLE_STYLE_ROUNDED,
+	TABLE_STYLE_MINIMAL
+};
+
 struct RenderConfig {
     Unicode::BoxChars boxChars;
     Style::CellStyle headerStyle;
@@ -419,11 +427,28 @@ struct RenderConfig {
 
     // NEW: auto-increment ID behavior when loading CSV
     bool autoIncrementId;
+
+    // NEW: body coloring options
+    Style::Color body_background;              // background applied to all body cells (if != 49)
+    Style::Color color_body;                   // foreground applied to all body cells (if != 39)
+    Style::Color even_background;              // background for even rows (overrides body_background if set)
+    Style::Color odd_background;               // background for odd rows
+    std::map<std::string, Style::Color> color_column; // per-column foreground overrides (column name -> color)
+    std::map<std::string, Style::CellStyle> value_styles; // value-based cell rules
+    TableStyle tableStyle; // new: choose shape
+
     RenderConfig() : boxChars(), headerStyle(), cellStyle(), footerStyle(), showHeader(true),
                      showFooter(false), footerText(""), padding(1), autoWidth(true),
-                     autoIncrementId(true) {  // <-- changed to true by default
+                     autoIncrementId(true),
+                     body_background(Style::Color(49)), color_body(Style::Color::Default()),
+                     even_background(Style::Color(49)), odd_background(Style::Color(49)),
+                     tableStyle(TABLE_STYLE_ROUNDED) // default to rounded corners
+    {
         headerStyle.bold = true;
         headerStyle.foreground = Style::Color::BrightCyan();
+        borderStyle.foreground = Style::Color::BrightWhite();
+        // default box chars follow the default table style
+        boxChars = Unicode::BoxChars::rounded();
     }
 
     static RenderConfig elegant() {
@@ -433,6 +458,7 @@ struct RenderConfig {
         cfg.headerStyle.foreground = Style::Color::BrightWhite();
         cfg.headerStyle.background = Style::Color(44);
         cfg.borderStyle.foreground = Style::Color::BrightWhite();
+        cfg.tableStyle = TABLE_STYLE_DOUBLE; // ensure double lines for elegant style
         return cfg;
     }
 
@@ -441,6 +467,7 @@ struct RenderConfig {
         cfg.padding = 0;
         cfg.headerStyle.bold = true;
         cfg.borderStyle.foreground = Style::Color::Default();
+        cfg.tableStyle = TABLE_STYLE_MINIMAL; // ensure minimal style
         return cfg;
     }
 };
@@ -461,19 +488,41 @@ public:
         
         _buffer.clear();
         _buffer.str("");
-        
+
+        const std::vector<Column>& cols = table.columns();
+
+        // Top/header/data rendering (unchanged logic)
         renderTopBorder(table);
         if (_config.showHeader) {
             renderHeader(table);
             renderHeaderSeparator(table);
         }
         renderRows(table);
-        if (_config.showFooter) {
-            renderFooterSeparator(table);
-            renderFooter(table);
+
+        // Decide footer placement: inside if footer fits, otherwise print outside
+        size_t totalInnerWidth = 0;
+        for (size_t i = 0; i < cols.size(); ++i) {
+            totalInnerWidth += cols[i].width() + 2 * _config.padding;
+            if (i + 1 < cols.size()) totalInnerWidth += 1; // join spacing between columns
         }
-        renderBottomBorder(table);
-        
+
+        if (_config.showFooter && !_config.footerText.empty()) {
+            size_t footerWidth = Unicode::displayWidth(_config.footerText);
+            if (footerWidth > totalInnerWidth) {
+                // Footer too wide: close table first, then print footer as its own styled line
+                renderBottomBorder(table);
+                _buffer << _config.footerStyle.apply(_config.footerText) << "\n";
+            } else {
+                // Footer fits: render inside table as before
+                renderFooterSeparator(table);
+                renderFooter(table);
+                renderBottomBorder(table);
+            }
+        } else {
+            // No footer: just close table
+            renderBottomBorder(table);
+        }
+
         return _buffer.str();
     }
     
@@ -549,11 +598,54 @@ private:
             putBorder(_config.boxChars.vertical);
 
             for (size_t c = 0; c < cols.size(); ++c) {
-                std::string value = cols[c].format(rows[r].getValue(cols[c].name()));
-                std::string content = Unicode::pad(value, cols[c].width(), cols[c].getAlignChar());
+                std::string raw = cols[c].format(rows[r].getValue(cols[c].name()));
+                std::string content = Unicode::pad(raw, cols[c].width(), cols[c].getAlignChar());
+
+                // Build effective cell style: start from default cellStyle
+                Style::CellStyle eff = _config.cellStyle;
+
+                // global body foreground override
+                if (_config.color_body.code != Style::Color::Default().code) {
+                    eff.foreground = _config.color_body;
+                }
+
+                // per-column foreground override (higher priority)
+                std::map<std::string, Style::Color>::const_iterator itcol =
+                    _config.color_column.find(cols[c].name());
+                if (itcol != _config.color_column.end()) {
+                    eff.foreground = itcol->second;
+                }
+
+                // background: base is body_background unless row stripe overrides
+                if (_config.body_background.code != 49) {
+                    eff.background = _config.body_background;
+                }
+
+                // row stripe overrides
+                if ((r % 2) == 0) { // even row (0-based)
+                    if (_config.even_background.code != 49) eff.background = _config.even_background;
+                } else {
+                    if (_config.odd_background.code != 49) eff.background = _config.odd_background;
+                }
+
+                // NEW: value-based styling (case-insensitive)
+                std::string key = raw;
+                strcase_toggle(&key, 1); // lowercase
+                std::map<std::string, Style::CellStyle>::const_iterator itv = _config.value_styles.find(key);
+                if (itv != _config.value_styles.end()) {
+                    const Style::CellStyle &rule = itv->second;
+                    // override foreground if provided (non-default)
+                    if (rule.foreground.code != Style::Color::Default().code) eff.foreground = rule.foreground;
+                    // override background if provided (non-default)
+                    if (rule.background.code != 49) eff.background = rule.background;
+                    // override text attributes if requested (true means enable)
+                    if (rule.bold) eff.bold = true;
+                    if (rule.italic) eff.italic = true;
+                    if (rule.underline) eff.underline = true;
+                }
 
                 _buffer << repeat(" ", _config.padding);
-                _buffer << _config.cellStyle.apply(content);
+                _buffer << eff.apply(content);
                 _buffer << repeat(" ", _config.padding);
                 putBorder(_config.boxChars.vertical);
             }
@@ -763,13 +855,15 @@ public:
         _table.addRow(row);
     }
 
-    std::string render(const RenderConfig& config = RenderConfig()) {
-        TableRenderer renderer(config);
-        return renderer.render(_table);
-    }
-
+    // expose table for callers (needed by tests/util modules)
     Table& table() { return _table; }
     const Table& table() const { return _table; }
+
+    // Render the table using TableRenderer so styles are always applied
+    std::string render(const RenderConfig& config = RenderConfig()) const {
+        TableRenderer renderer(config);
+        return renderer.render(const_cast<Table&>(_table));
+    }
 
     std::vector<Row> where(const std::string& column, const std::string& value) const {
         std::vector<Row> results;

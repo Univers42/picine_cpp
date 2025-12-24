@@ -1,7 +1,7 @@
 #include "colors.hpp"
 #include "csv.hpp"
 #include "Date.hpp"
-#include "database_system.hpp"
+#include "Database.hpp"
 #include <iostream>
 #include <fstream>
 
@@ -13,7 +13,7 @@ void example_csv_filtering() {
     std::cout << "\n╔══════════════════════════════════════════════╗\n";
     std::cout << "║  Example 1: CSV Processing & Filtering      ║\n";
     std::cout << "╚══════════════════════════════════════════════╝\n\n";
-    
+
     // Create sample CSV
     std::ofstream file("employees.csv");
     file << "ID,Name,Department,Salary,HireDate,Active\n";
@@ -23,31 +23,38 @@ void example_csv_filtering() {
     file << "4,Diana Prince,Sales,82000,2018-11-05,true\n";
     file << "5,Eve Davis,Engineering,92000,2020-08-17,true\n";
     file.close();
-    
+
     // Load and process
     CSV::Document doc;
     if (!doc.load("employees.csv")) {
         std::cerr << "Error: " << doc.error() << "\n";
         return;
     }
-    
+
     std::cout << "Total employees: " << doc.rowCount() << "\n\n";
-    
+
     // Filter: Only Engineering department
-    auto engineers = CSV::Filter::where(doc, "Department", "Engineering");
+    CSV::Document engineers = CSV::Filter::where(doc, "Department", "Engineering");
     std::cout << "Engineers found: " << engineers.rowCount() << "\n";
-    
+
     // Calculate average salary for engineers
     double avgSalary = CSV::Aggregate::average(engineers, "Salary");
     std::cout << "Average Engineering salary: $" << (int)avgSalary << "\n\n";
-    
-    // Filter: Active employees with salary > 80000
-    auto highEarners = CSV::Filter::filter(doc, [](const CSV::Row& row) {
-        return row.getBool(5) && row.getDouble(3) > 80000;
-    });
-    
+
+    // Filter: Active employees with salary > 80000 (manual)
+    CSV::Document highEarners;
+    highEarners.setHeaders(doc.headers());
+    for (size_t i = 0; i < doc.rows().size(); ++i) {
+        const CSV::Row& r = doc.rows()[i];
+        if (r.getBool(5) && r.getDouble(3) > 80000) {
+            highEarners.addRow(r);
+        }
+    }
+
     std::cout << "High earning active employees:\n";
-    for (const auto& row : highEarners.rows()) {
+    const std::vector<CSV::Row>& heRows = highEarners.rows();
+    for (size_t i = 0; i < heRows.size(); ++i) {
+        const CSV::Row& row = heRows[i];
         std::cout << "  - " << row[1] << ": $" << row[3] << "\n";
     }
 }
@@ -133,10 +140,10 @@ void example_colors() {
     std::cout << "Darker (30%):  " << fmt.fg("████████", darker) << " " << darker.toHex() << "\n\n";
     
     // Gradient
-    auto gradient = Colors::Gradient::Rainbow().generate(10);
+    std::vector<Colors::RGB> gradient = Colors::Gradient::Rainbow().generate(10);
     std::cout << "Rainbow gradient: ";
-    for (const auto& color : gradient) {
-        std::cout << fmt.fg("█", color);
+    for (size_t i = 0; i < gradient.size(); ++i) {
+        std::cout << fmt.fg("█", gradient[i]);
     }
     std::cout << "\n";
 }
@@ -149,7 +156,7 @@ void example_integration() {
     std::cout << "\n╔══════════════════════════════════════════════╗\n";
     std::cout << "║  Example 4: Full Integration                 ║\n";
     std::cout << "╚══════════════════════════════════════════════╝\n\n";
-    
+
     // Create sample data with dates
     std::ofstream file("sales.csv");
     file << "Date,Product,Units,Revenue\n";
@@ -159,34 +166,35 @@ void example_integration() {
     file << "2024-04-05,Widget C,120,$9600\n";
     file << "2024-05-18,Widget B,220,$11000\n";
     file.close();
-    
+
     // Load CSV
     CSV::Document csvDoc;
     csvDoc.load("sales.csv");
-    
+
     // Convert to Database
     Database db;
     db.addColumn("Date", ColumnType::DATE, Alignment::LEFT);
     db.addColumn("Product", ColumnType::STRING, Alignment::LEFT);
     db.addColumn("Units", ColumnType::INTEGER, Alignment::RIGHT);
     db.addColumn("Revenue", ColumnType::STRING, Alignment::RIGHT);
-    
-    for (const auto& row : csvDoc.rows()) {
-        db.addRow({
-            {"Date", row[0]},
-            {"Product", row[1]},
-            {"Units", row[2]},
-            {"Revenue", row[3]}
-        });
+
+    for (size_t i = 0; i < csvDoc.rows().size(); ++i) {
+        const CSV::Row& row = csvDoc.rows()[i];
+        std::map<std::string,std::string> r;
+        r["Date"] = row[0];
+        r["Product"] = row[1];
+        r["Units"] = row[2];
+        r["Revenue"] = row[3];
+        db.addRow(r);
     }
-    
+
     // Calculate totals
     double totalRevenue = CSV::Aggregate::sum(csvDoc, "Revenue");
     int totalUnits = 0;
-    for (const auto& row : csvDoc.rows()) {
-        totalUnits += row.getInt(2);
+    for (size_t i = 0; i < csvDoc.rows().size(); ++i) {
+        totalUnits += csvDoc.rows()[i].getInt(2);
     }
-    
+
     // Style with colors
     RenderConfig config;
     config.boxChars = Unicode::BoxChars::doubleLine();
@@ -194,11 +202,14 @@ void example_integration() {
     config.headerStyle.bold = true;
     config.padding = 2;
     config.showFooter = true;
-    config.footerText = "Total Units: " + std::to_string(totalUnits) + 
-                        " | Total Revenue: $" + std::to_string((int)totalRevenue);
+    {
+        std::ostringstream oss;
+        oss << "Total Units: " << totalUnits << " | Total Revenue: $" << (int)totalRevenue;
+        config.footerText = oss.str();
+    }
     config.footerStyle.foreground = Style::Color::BrightYellow();
     config.footerStyle.bold = true;
-    
+
     std::cout << db.render(config);
 }
 
@@ -216,22 +227,27 @@ void example_advanced_csv() {
     doc.load("employees.csv");
     
     // Group by department
-    auto groups = CSV::Filter::groupBy(doc, "Department");
+    std::map<std::string, CSV::Document> groups = CSV::Filter::groupBy(doc, "Department");
     
     std::cout << "Department Analysis:\n";
     std::cout << "──────────────────────────────────────────────\n\n";
     
-    for (const auto& group : groups) {
-        std::cout << "Department: " << group.first << "\n";
-        std::cout << "  Employees: " << group.second.rowCount() << "\n";
-        std::cout << "  Avg Salary: $" << (int)CSV::Aggregate::average(group.second, "Salary") << "\n";
-        std::cout << "  Total Payroll: $" << (int)CSV::Aggregate::sum(group.second, "Salary") << "\n";
+    for (std::map<std::string, CSV::Document>::const_iterator git = groups.begin(); git != groups.end(); ++git) {
+        const std::string& dept = git->first;
+        const CSV::Document& subdoc = git->second;
+        std::cout << "Department: " << dept << "\n";
+        std::cout << "  Employees: " << subdoc.rowCount() << "\n";
+        std::cout << "  Avg Salary: $" << (int)CSV::Aggregate::average(subdoc, "Salary") << "\n";
+        std::cout << "  Total Payroll: $" << (int)CSV::Aggregate::sum(subdoc, "Salary") << "\n";
         
-        // Active employees in this department
-        auto active = CSV::Filter::filter(group.second, [](const CSV::Row& row) {
-            return row.getBool(5);
-        });
-        std::cout << "  Active: " << active.rowCount() << "/" << group.second.rowCount() << "\n\n";
+        // Active employees in this department (manual filter)
+        CSV::Document active;
+        active.setHeaders(subdoc.headers());
+        for (size_t i = 0; i < subdoc.rows().size(); ++i) {
+            const CSV::Row& r = subdoc.rows()[i];
+            if (r.getBool(5)) active.addRow(r);
+        }
+        std::cout << "  Active: " << active.rowCount() << "/" << subdoc.rowCount() << "\n\n";
     }
     
     // Salary distribution
@@ -266,12 +282,9 @@ void example_date_range() {
     // Count weekends
     int weekends = 0;
     int weekdays = 0;
-    for (const Date& date : december) {
-        if (DateUtils::isWeekend(date)) {
-            ++weekends;
-        } else {
-            ++weekdays;
-        }
+    for (DateRange::Iterator it = december.begin(); it != december.end(); ++it) {
+        Date date = *it;
+        if (DateUtils::isWeekend(date)) ++weekends; else ++weekdays;
     }
     
     std::cout << "  Weekdays: " << weekdays << "\n";
@@ -279,8 +292,9 @@ void example_date_range() {
     
     // Find all Mondays
     std::cout << "All Mondays in December:\n";
-    for (const Date& date : december) {
-        if (date.weekday() == 1) {  // Monday
+    for (DateRange::Iterator it = december.begin(); it != december.end(); ++it) {
+        Date date = *it;
+        if (date.weekday() == 1) {
             std::cout << "  " << date.toString("Weekday, Month DD") << "\n";
         }
     }
@@ -294,37 +308,43 @@ void example_gradient_table() {
     std::cout << "\n╔══════════════════════════════════════════════╗\n";
     std::cout << "║  Example 7: Colored Gradient Table           ║\n";
     std::cout << "╚══════════════════════════════════════════════╝\n\n";
-    
+
     Database db;
     db.addColumn("Temperature", ColumnType::INTEGER, Alignment::RIGHT);
     db.addColumn("Status", ColumnType::STRING, Alignment::LEFT);
     db.addColumn("Color", ColumnType::STRING, Alignment::CENTER);
-    
+
     // Temperature scale with colors
     Colors::Gradient tempGradient(Colors::Palette::Blue(), Colors::Palette::Red());
     Colors::Formatter fmt;
-    
-    std::vector<int> temps = {0, 25, 50, 75, 100};
-    std::vector<std::string> status = {"Freezing", "Cool", "Warm", "Hot", "Boiling"};
-    
-    for (size_t i = 0; i < temps.size(); ++i) {
-        double position = (double)i / (temps.size() - 1);
+
+    int tempsArr[] = {0, 25, 50, 75, 100};
+    const size_t T_N = sizeof(tempsArr)/sizeof(tempsArr[0]);
+    const char* statusArr[] = {"Freezing", "Cool", "Warm", "Hot", "Boiling"};
+    std::vector<std::string> status;
+    for (size_t i = 0; i < T_N; ++i) status.push_back(statusArr[i]);
+
+    for (size_t i = 0; i < T_N; ++i) {
+        double position = static_cast<double>(i) / (T_N - 1);
         Colors::RGB color = tempGradient.at(position);
-        
         std::string colorBlock = fmt.fg("████", color);
-        
-        db.addRow({
-            {"Temperature", std::to_string(temps[i]) + "°C"},
-            {"Status", status[i]},
-            {"Color", colorBlock}
-        });
+
+        std::map<std::string,std::string> r;
+        {
+            std::ostringstream oss;
+            oss << tempsArr[i] << "°C";
+            r["Temperature"] = oss.str();
+        }
+        r["Status"] = status[i];
+        r["Color"] = colorBlock;
+        db.addRow(r);
     }
-    
+
     RenderConfig config;
     config.boxChars = Unicode::BoxChars::rounded();
     config.headerStyle.bold = true;
     config.headerStyle.foreground = Style::Color::BrightMagenta();
-    
+
     std::cout << db.render(config);
 }
 

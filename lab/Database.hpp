@@ -11,10 +11,7 @@
 /* ************************************************************************** */
 
 #ifndef DATABASE_HPP
-# define DATABASE_HPP
-
-#ifndef DATABASE_SYSTEM_HPP
-#define DATABASE_SYSTEM_HPP
+#define DATABASE_HPP
 
 #include <string>
 #include <vector>
@@ -24,28 +21,31 @@
 #include <fstream>
 #include <iomanip>
 #include <algorithm>
-#include <cstdint>
 
 // ============================================================================
 // UNICODE UTILITIES
 // ============================================================================
 
 namespace Unicode {
-    // Box drawing characters
     struct BoxChars {
-        std::string topLeft = "┌";
-        std::string topRight = "┐";
-        std::string bottomLeft = "└";
-        std::string bottomRight = "┘";
-        std::string horizontal = "─";
-        std::string vertical = "│";
-        std::string cross = "┼";
-        std::string teeLeft = "├";
-        std::string teeRight = "┤";
-        std::string teeTop = "┬";
-        std::string teeBottom = "┴";
-        
-        // Heavy variants
+        std::string topLeft;
+        std::string topRight;
+        std::string bottomLeft;
+        std::string bottomRight;
+        std::string horizontal;
+        std::string vertical;
+        std::string cross;
+        std::string teeLeft;
+        std::string teeRight;
+        std::string teeTop;
+        std::string teeBottom;
+
+        BoxChars() {
+            topLeft = "┌"; topRight = "┐"; bottomLeft = "└"; bottomRight = "┘";
+            horizontal = "─"; vertical = "│"; cross = "┼";
+            teeLeft = "├"; teeRight = "┤"; teeTop = "┬"; teeBottom = "┴";
+        }
+
         static BoxChars heavy() {
             BoxChars b;
             b.topLeft = "┏"; b.topRight = "┓";
@@ -56,8 +56,7 @@ namespace Unicode {
             b.teeBottom = "┻";
             return b;
         }
-        
-        // Double line variants
+
         static BoxChars doubleLine() {
             BoxChars b;
             b.topLeft = "╔"; b.topRight = "╗";
@@ -68,8 +67,7 @@ namespace Unicode {
             b.teeBottom = "╩";
             return b;
         }
-        
-        // Rounded corners
+
         static BoxChars rounded() {
             BoxChars b;
             b.topLeft = "╭"; b.topRight = "╮";
@@ -77,7 +75,7 @@ namespace Unicode {
             return b;
         }
     };
-    
+
     // Calculate display width of UTF-8 string
     size_t displayWidth(const std::string& str) {
         size_t width = 0;
@@ -115,52 +113,53 @@ namespace Unicode {
 // ============================================================================
 
 namespace Style {
-    // ANSI color codes
     struct Color {
         int code;
-        
-        static Color Black() { return {30}; }
-        static Color Red() { return {31}; }
-        static Color Green() { return {32}; }
-        static Color Yellow() { return {33}; }
-        static Color Blue() { return {34}; }
-        static Color Magenta() { return {35}; }
-        static Color Cyan() { return {36}; }
-        static Color White() { return {37}; }
-        static Color BrightBlack() { return {90}; }
-        static Color BrightRed() { return {91}; }
-        static Color BrightGreen() { return {92}; }
-        static Color BrightYellow() { return {93}; }
-        static Color BrightBlue() { return {94}; }
-        static Color BrightMagenta() { return {95}; }
-        static Color BrightCyan() { return {96}; }
-        static Color BrightWhite() { return {97}; }
-        static Color Default() { return {39}; }
-        
+        Color() : code(39) {}
+        explicit Color(int c) : code(c) {}
+        static Color Black() { return Color(30); }
+        static Color Red() { return Color(31); }
+        static Color Green() { return Color(32); }
+        static Color Yellow() { return Color(33); }
+        static Color Blue() { return Color(34); }
+        static Color Magenta() { return Color(35); }
+        static Color Cyan() { return Color(36); }
+        static Color White() { return Color(37); }
+        static Color BrightBlack() { return Color(90); }
+        static Color BrightRed() { return Color(91); }
+        static Color BrightGreen() { return Color(92); }
+        static Color BrightYellow() { return Color(93); }
+        static Color BrightBlue() { return Color(94); }
+        static Color BrightMagenta() { return Color(95); }
+        static Color BrightCyan() { return Color(96); }
+        static Color BrightWhite() { return Color(97); }
+        static Color Default() { return Color(39); }
+
         static Color RGB(int r, int g, int b) {
-            // Returns approximate ANSI color
-            return {30 + (r > 127 ? 0 : 0) + (g > 127 ? 2 : 0) + (b > 127 ? 4 : 0)};
+            return Color(30 + (r > 127 ? 0 : 0) + (g > 127 ? 2 : 0) + (b > 127 ? 4 : 0));
         }
     };
-    
+
     struct CellStyle {
-        Color foreground = Color::Default();
-        Color background = Color{49}; // Default background
-        bool bold = false;
-        bool italic = false;
-        bool underline = false;
-        
+        Color foreground;
+        Color background;
+        bool bold;
+        bool italic;
+        bool underline;
+
+        CellStyle() : foreground(Color::Default()), background(Color(49)), bold(false), italic(false), underline(false) {}
+
         std::string apply(const std::string& text) const {
             std::ostringstream oss;
             oss << "\033[";
             bool first = true;
-            
-            if (bold) { oss << (first ? "" : ";") << "1"; first = false; }
-            if (italic) { oss << (first ? "" : ";") << "3"; first = false; }
-            if (underline) { oss << (first ? "" : ";") << "4"; first = false; }
-            if (foreground.code != 39) { oss << (first ? "" : ";") << foreground.code; first = false; }
-            if (background.code != 49) { oss << (first ? "" : ";") << background.code; first = false; }
-            
+
+            if (bold) { if (!first) oss << ";"; oss << "1"; first = false; }
+            if (italic) { if (!first) oss << ";"; oss << "3"; first = false; }
+            if (underline) { if (!first) oss << ";"; oss << "4"; first = false; }
+            if (foreground.code != 39) { if (!first) oss << ";"; oss << foreground.code; first = false; }
+            if (background.code != 49) { if (!first) oss << ";"; oss << background.code; first = false; }
+
             oss << "m" << text << "\033[0m";
             return oss.str();
         }
@@ -171,56 +170,42 @@ namespace Style {
 // COLUMN TYPE SYSTEM
 // ============================================================================
 
-enum class ColumnType {
-    STRING,
-    INTEGER,
-    DOUBLE,
-    DATE,
-    BOOLEAN
-};
+/* replace enum class (C++11) with plain enums */
+namespace ColumnType {
+    enum Type { STRING = 0, INTEGER = 1, DOUBLE = 2, DATE = 3, BOOLEAN = 4 };
+}
 
-enum class Alignment {
-    LEFT,
-    CENTER,
-    RIGHT
-};
+namespace Alignment {
+    enum Type { LEFT = 0, CENTER = 1, RIGHT = 2 };
+}
 
 class Column {
 public:
-    Column(const std::string& name, ColumnType type = ColumnType::STRING, 
-           Alignment align = Alignment::LEFT)
+    Column(const std::string& name, ColumnType::Type type = ColumnType::STRING, Alignment::Type align = Alignment::LEFT)
         : _name(name), _type(type), _alignment(align), _width(0) {}
-    
+
     const std::string& name() const { return _name; }
-    ColumnType type() const { return _type; }
-    Alignment alignment() const { return _alignment; }
+    ColumnType::Type type() const { return _type; }
+    Alignment::Type alignment() const { return _alignment; }
     size_t width() const { return _width; }
     void setWidth(size_t w) { _width = w; }
-    
+
     char getAlignChar() const {
-        switch (_alignment) {
-            case Alignment::CENTER: return 'c';
-            case Alignment::RIGHT: return 'r';
-            default: return 'l';
-        }
+        if (_alignment == Alignment::CENTER) return 'c';
+        if (_alignment == Alignment::RIGHT) return 'r';
+        return 'l';
     }
-    
+
     std::string format(const std::string& value) const {
-        switch (_type) {
-            case ColumnType::INTEGER:
-            case ColumnType::DOUBLE:
-                return value;
-            case ColumnType::BOOLEAN:
-                return (value == "1" || value == "true") ? "✓" : "✗";
-            default:
-                return value;
-        }
+        if (_type == ColumnType::INTEGER || _type == ColumnType::DOUBLE) return value;
+        if (_type == ColumnType::BOOLEAN) return (value == "1" || value == "true") ? "✓" : "✗";
+        return value;
     }
 
 private:
     std::string _name;
-    ColumnType _type;
-    Alignment _alignment;
+    ColumnType::Type _type;
+    Alignment::Type _alignment;
     size_t _width;
 };
 
@@ -231,16 +216,17 @@ private:
 class Row {
 public:
     Row() {}
-    
+
     void setValue(const std::string& columnName, const std::string& value) {
         _data[columnName] = value;
     }
-    
+
     std::string getValue(const std::string& columnName) const {
-        auto it = _data.find(columnName);
-        return (it != _data.end()) ? it->second : "";
+        std::map<std::string, std::string>::const_iterator it = _data.find(columnName);
+        if (it != _data.end()) return it->second;
+        return "";
     }
-    
+
     const std::map<std::string, std::string>& data() const { return _data; }
 
 private:
@@ -254,37 +240,39 @@ private:
 class Table {
 public:
     Table() {}
-    
+
     void addColumn(const Column& col) {
         _columns.push_back(col);
     }
-    
+
     void addRow(const Row& row) {
         _rows.push_back(row);
     }
-    
+
     const std::vector<Column>& columns() const { return _columns; }
     std::vector<Column>& columns() { return _columns; }
     const std::vector<Row>& rows() const { return _rows; }
-    
+
     void clear() {
         _rows.clear();
     }
-    
+
     size_t columnCount() const { return _columns.size(); }
     size_t rowCount() const { return _rows.size(); }
-    
+
     // Auto-calculate column widths based on content
     void calculateColumnWidths() {
-        for (auto& col : _columns) {
+        for (size_t ci = 0; ci < _columns.size(); ++ci) {
+            Column& col = _columns[ci];
             size_t maxWidth = Unicode::displayWidth(col.name());
-            
-            for (const auto& row : _rows) {
+
+            for (size_t ri = 0; ri < _rows.size(); ++ri) {
+                const Row& row = _rows[ri];
                 std::string value = col.format(row.getValue(col.name()));
                 size_t width = Unicode::displayWidth(value);
-                maxWidth = std::max(maxWidth, width);
+                if (width > maxWidth) maxWidth = width;
             }
-            
+
             col.setWidth(maxWidth);
         }
     }
@@ -303,27 +291,27 @@ struct RenderConfig {
     Style::CellStyle headerStyle;
     Style::CellStyle cellStyle;
     Style::CellStyle footerStyle;
-    bool showHeader = true;
-    bool showFooter = false;
-    std::string footerText = "";
-    int padding = 1;
-    bool autoWidth = true;
-    
-    RenderConfig() {
-        // Default: bold cyan header
+    bool showHeader;
+    bool showFooter;
+    std::string footerText;
+    int padding;
+    bool autoWidth;
+
+    RenderConfig() : boxChars(), headerStyle(), cellStyle(), footerStyle(), showHeader(true),
+                     showFooter(false), footerText(""), padding(1), autoWidth(true) {
         headerStyle.bold = true;
         headerStyle.foreground = Style::Color::BrightCyan();
     }
-    
+
     static RenderConfig elegant() {
         RenderConfig cfg;
         cfg.boxChars = Unicode::BoxChars::doubleLine();
         cfg.headerStyle.bold = true;
         cfg.headerStyle.foreground = Style::Color::BrightWhite();
-        cfg.headerStyle.background = Style::Color{44}; // Cyan bg
+        cfg.headerStyle.background = Style::Color(44);
         return cfg;
     }
-    
+
     static RenderConfig minimal() {
         RenderConfig cfg;
         cfg.padding = 0;
@@ -374,107 +362,99 @@ private:
     
     void renderTopBorder(const Table& table) {
         _buffer << _config.boxChars.topLeft;
-        
-        const auto& cols = table.columns();
+
+        const std::vector<Column>& cols = table.columns();
         for (size_t i = 0; i < cols.size(); ++i) {
             size_t width = cols[i].width() + 2 * _config.padding;
             _buffer << repeat(_config.boxChars.horizontal, width);
-            
+
             if (i < cols.size() - 1) {
                 _buffer << _config.boxChars.teeTop;
             }
         }
-        
+
         _buffer << _config.boxChars.topRight << "\n";
     }
     
     void renderHeader(const Table& table) {
         _buffer << _config.boxChars.vertical;
-        
-        const auto& cols = table.columns();
+
+        const std::vector<Column>& cols = table.columns();
         for (size_t i = 0; i < cols.size(); ++i) {
-            std::string content = Unicode::pad(
-                cols[i].name(),
-                cols[i].width(),
-                'c'
-            );
-            
+            std::string content = Unicode::pad(cols[i].name(), cols[i].width(), 'c');
+
             _buffer << repeat(" ", _config.padding);
             _buffer << _config.headerStyle.apply(content);
             _buffer << repeat(" ", _config.padding);
             _buffer << _config.boxChars.vertical;
         }
-        
+
         _buffer << "\n";
     }
-    
+
     void renderHeaderSeparator(const Table& table) {
         _buffer << _config.boxChars.teeLeft;
-        
-        const auto& cols = table.columns();
+
+        const std::vector<Column>& cols = table.columns();
         for (size_t i = 0; i < cols.size(); ++i) {
             size_t width = cols[i].width() + 2 * _config.padding;
             _buffer << repeat(_config.boxChars.horizontal, width);
-            
+
             if (i < cols.size() - 1) {
                 _buffer << _config.boxChars.cross;
             }
         }
-        
+
         _buffer << _config.boxChars.teeRight << "\n";
     }
     
     void renderRows(const Table& table) {
-        const auto& cols = table.columns();
-        const auto& rows = table.rows();
-        
+        const std::vector<Column>& cols = table.columns();
+        const std::vector<Row>& rows = table.rows();
+
         for (size_t r = 0; r < rows.size(); ++r) {
             _buffer << _config.boxChars.vertical;
-            
+
             for (size_t c = 0; c < cols.size(); ++c) {
                 std::string value = cols[c].format(rows[r].getValue(cols[c].name()));
-                std::string content = Unicode::pad(
-                    value,
-                    cols[c].width(),
-                    cols[c].getAlignChar()
-                );
-                
+                std::string content = Unicode::pad(value, cols[c].width(), cols[c].getAlignChar());
+
                 _buffer << repeat(" ", _config.padding);
                 _buffer << _config.cellStyle.apply(content);
                 _buffer << repeat(" ", _config.padding);
                 _buffer << _config.boxChars.vertical;
             }
-            
+
             _buffer << "\n";
         }
     }
     
     void renderFooterSeparator(const Table& table) {
         _buffer << _config.boxChars.teeLeft;
-        
-        const auto& cols = table.columns();
+
+        const std::vector<Column>& cols = table.columns();
         for (size_t i = 0; i < cols.size(); ++i) {
             size_t width = cols[i].width() + 2 * _config.padding;
             _buffer << repeat(_config.boxChars.horizontal, width);
-            
+
             if (i < cols.size() - 1) {
                 _buffer << _config.boxChars.cross;
             }
         }
-        
+
         _buffer << _config.boxChars.teeRight << "\n";
     }
     
     void renderFooter(const Table& table) {
         _buffer << _config.boxChars.vertical;
-        
+
         size_t totalWidth = 0;
-        const auto& cols = table.columns();
-        for (const auto& col : cols) {
-            totalWidth += col.width() + 2 * _config.padding + 1;
+        const std::vector<Column>& cols = table.columns();
+        for (size_t i = 0; i < cols.size(); ++i) {
+            totalWidth += cols[i].width() + 2 * _config.padding + 1;
         }
-        totalWidth -= 1; // Remove last separator
-        
+        totalWidth -= 1;
+
         std::string content = Unicode::pad(_config.footerText, totalWidth - 2, 'c');
         _buffer << " " << _config.footerStyle.apply(content) << " ";
         _buffer << _config.boxChars.vertical << "\n";
@@ -482,17 +462,17 @@ private:
     
     void renderBottomBorder(const Table& table) {
         _buffer << _config.boxChars.bottomLeft;
-        
-        const auto& cols = table.columns();
+
+        const std::vector<Column>& cols = table.columns();
         for (size_t i = 0; i < cols.size(); ++i) {
             size_t width = cols[i].width() + 2 * _config.padding;
             _buffer << repeat(_config.boxChars.horizontal, width);
-            
+
             if (i < cols.size() - 1) {
                 _buffer << _config.boxChars.teeBottom;
             }
         }
-        
+
         _buffer << _config.boxChars.bottomRight << "\n";
     }
     
@@ -513,33 +493,35 @@ class CsvParser {
 public:
     static Table parse(const std::string& path, bool hasHeader = true) {
         Table table;
-        std::ifstream file(path);
+        std::ifstream file;
+        file.open(path.c_str());
         if (!file.is_open()) {
             throw std::runtime_error("Cannot open file: " + path);
         }
-        
+
         std::string line;
         bool isFirstLine = true;
         std::vector<std::string> headers;
-        
+
         while (std::getline(file, line)) {
-            auto fields = parseLine(line);
-            
+            std::vector<std::string> fields = parseLine(line);
+
             if (isFirstLine && hasHeader) {
                 headers = fields;
-                for (const auto& header : headers) {
-                    table.addColumn(Column(header));
+                for (size_t i = 0; i < headers.size(); ++i) {
+                    table.addColumn(Column(headers[i]));
                 }
                 isFirstLine = false;
             } else {
                 if (headers.empty()) {
-                    // Generate default headers
                     for (size_t i = 0; i < fields.size(); ++i) {
-                        headers.push_back("Column" + std::to_string(i + 1));
+                        std::ostringstream oss;
+                        oss << (i + 1);
+                        headers.push_back(std::string("Column") + oss.str());
                         table.addColumn(Column(headers.back()));
                     }
                 }
-                
+
                 Row row;
                 for (size_t i = 0; i < fields.size() && i < headers.size(); ++i) {
                     row.setValue(headers[i], fields[i]);
@@ -547,7 +529,7 @@ public:
                 table.addRow(row);
             }
         }
-        
+
         return table;
     }
 
@@ -592,49 +574,49 @@ private:
 // ============================================================================
 
 class Database {
-public:
+ public:
     Database() {}
-    
+ 
     void loadFromCsv(const std::string& path, bool hasHeader = true) {
         _table = CsvParser::parse(path, hasHeader);
     }
-    
-    void addColumn(const std::string& name, ColumnType type = ColumnType::STRING,
-                   Alignment align = Alignment::LEFT) {
+ 
+    void addColumn(const std::string& name, ColumnType::Type type = ColumnType::STRING,
+                   Alignment::Type align = Alignment::LEFT) {
         _table.addColumn(Column(name, type, align));
     }
-    
+ 
     void addRow(const std::map<std::string, std::string>& data) {
         Row row;
-        for (const auto& pair : data) {
-            row.setValue(pair.first, pair.second);
+        for (std::map<std::string, std::string>::const_iterator it = data.begin(); it != data.end(); ++it) {
+            row.setValue(it->first, it->second);
         }
         _table.addRow(row);
     }
-    
+ 
     std::string render(const RenderConfig& config = RenderConfig()) {
         TableRenderer renderer(config);
         return renderer.render(_table);
     }
-    
+ 
     Table& table() { return _table; }
     const Table& table() const { return _table; }
-    
-    // Query methods
+ 
     std::vector<Row> where(const std::string& column, const std::string& value) const {
         std::vector<Row> results;
-        for (const auto& row : _table.rows()) {
-            if (row.getValue(column) == value) {
-                results.push_back(row);
+        const std::vector<Row>& rows = _table.rows();
+        for (size_t i = 0; i < rows.size(); ++i) {
+            if (rows[i].getValue(column) == value) {
+                results.push_back(rows[i]);
             }
         }
         return results;
     }
-    
+ 
     size_t count() const { return _table.rowCount(); }
 
 private:
     Table _table;
 };
 
-#endif // DATABASE_SYSTEM_HPP
+#endif // DATABASE_HPP

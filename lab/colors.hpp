@@ -19,6 +19,8 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <iomanip> // added for setw/setfill
+#include <cstdlib> // added for strtol/atoi
 
 namespace Colors {
 
@@ -34,16 +36,33 @@ public:
     RGB(unsigned char red, unsigned char green, unsigned char blue) 
         : r(red), g(green), b(blue) {}
     
-    // Hex string constructor
+    // Hex string constructor (C++98-safe)
     RGB(const std::string& hex) {
-        if (hex[0] == '#') {
-            std::string h = hex.substr(1);
-            r = std::stoi(h.substr(0, 2), nullptr, 16);
-            g = std::stoi(h.substr(2, 2), nullptr, 16);
-            b = std::stoi(h.substr(4, 2), nullptr, 16);
-        } else {
-            r = g = b = 0;
+        r = g = b = 0;
+        if (hex.empty()) return;
+        std::string h = hex;
+        if (h[0] == '#') h = h.substr(1);
+        if (h.length() >= 6) {
+            r = (unsigned char)strtol(h.substr(0,2).c_str(), NULL, 16);
+            g = (unsigned char)strtol(h.substr(2,2).c_str(), NULL, 16);
+            b = (unsigned char)strtol(h.substr(4,2).c_str(), NULL, 16);
         }
+    }
+
+    // Parse rgb(r,g,b) format (C++98-safe) - added
+    static RGB parseRgbString(const std::string& str) {
+        RGB out;
+        size_t start = str.find('(');
+        size_t end = str.find(')');
+        if (start == std::string::npos || end == std::string::npos) return out;
+        std::string body = str.substr(start + 1, end - start - 1);
+        size_t p1 = body.find(',');
+        size_t p2 = (p1 == std::string::npos) ? std::string::npos : body.find(',', p1 + 1);
+        if (p1 == std::string::npos || p2 == std::string::npos) return out;
+        out.r = (unsigned char)atoi(body.substr(0, p1).c_str());
+        out.g = (unsigned char)atoi(body.substr(p1 + 1, p2 - p1 - 1).c_str());
+        out.b = (unsigned char)atoi(body.substr(p2 + 1).c_str());
+        return out;
     }
     
     std::string toHex() const {
@@ -195,16 +214,17 @@ public:
     
     // Get color by name
     static RGB get(const std::string& name) {
-        static std::map<std::string, RGB> colors = {
-            {"black", Black()}, {"white", White()},
-            {"red", Red()}, {"green", Green()}, {"blue", Blue()},
-            {"yellow", Yellow()}, {"magenta", Magenta()}, {"cyan", Cyan()},
-            {"gray", Gray()}, {"orange", Orange()}, {"purple", Purple()},
-            {"pink", Pink()}, {"brown", Brown()}, {"lime", Lime()},
-            {"navy", Navy()}, {"teal", Teal()}, {"maroon", Maroon()},
-            {"olive", Olive()}, {"aqua", Aqua()}
-        };
-        auto it = colors.find(name);
+        static std::map<std::string, RGB> colors;
+        if (colors.empty()) {
+            colors["black"] = Black(); colors["white"] = White();
+            colors["red"] = Red(); colors["green"] = Green(); colors["blue"] = Blue();
+            colors["yellow"] = Yellow(); colors["magenta"] = Magenta(); colors["cyan"] = Cyan();
+            colors["gray"] = Gray(); colors["orange"] = Orange(); colors["purple"] = Purple();
+            colors["pink"] = Pink(); colors["brown"] = Brown(); colors["lime"] = Lime();
+            colors["navy"] = Navy(); colors["teal"] = Teal(); colors["maroon"] = Maroon();
+            colors["olive"] = Olive(); colors["aqua"] = Aqua();
+        }
+        std::map<std::string, RGB>::const_iterator it = colors.find(name);
         return (it != colors.end()) ? it->second : RGB();
     }
 };
@@ -435,23 +455,13 @@ private:
 
 // Parse color from string (hex, rgb, or name)
 inline RGB parse(const std::string& str) {
+    if (str.empty()) return RGB();
     if (str[0] == '#') {
         return RGB(str);
     }
-    if (str.substr(0, 4) == "rgb(") {
-        // Parse rgb(r, g, b) format
-        size_t start = 4;
-        size_t comma1 = str.find(',', start);
-        size_t comma2 = str.find(',', comma1 + 1);
-        size_t end = str.find(')', comma2 + 1);
-        
-        int r = std::stoi(str.substr(start, comma1 - start));
-        int g = std::stoi(str.substr(comma1 + 1, comma2 - comma1 - 1));
-        int b = std::stoi(str.substr(comma2 + 1, end - comma2 - 1));
-        
-        return RGB(r, g, b);
+    if (str.size() >= 4 && str.substr(0,4) == "rgb(") {
+        return RGB::parseRgbString(str);
     }
-    // Try as named color
     return Palette::get(str);
 }
 
@@ -466,26 +476,29 @@ inline double distance(const RGB& c1, const RGB& c2) {
 
 // Find closest named color
 inline std::string closestName(const RGB& color) {
-    double minDist = 99999;
+    double minDist = 1e9;
     std::string closest = "unknown";
-    
-    std::vector<std::pair<std::string, RGB>> namedColors = {
-        {"black", Palette::Black()}, {"white", Palette::White()},
-        {"red", Palette::Red()}, {"green", Palette::Green()},
-        {"blue", Palette::Blue()}, {"yellow", Palette::Yellow()},
-        {"magenta", Palette::Magenta()}, {"cyan", Palette::Cyan()},
-        {"gray", Palette::Gray()}, {"orange", Palette::Orange()},
-        {"purple", Palette::Purple()}, {"pink", Palette::Pink()}
-    };
-    
-    for (const auto& pair : namedColors) {
-        double dist = distance(color, pair.second);
+    std::vector< std::pair<std::string, RGB> > namedColors;
+    namedColors.push_back(std::make_pair(std::string("black"), Palette::Black()));
+    namedColors.push_back(std::make_pair(std::string("white"), Palette::White()));
+    namedColors.push_back(std::make_pair(std::string("red"), Palette::Red()));
+    namedColors.push_back(std::make_pair(std::string("green"), Palette::Green()));
+    namedColors.push_back(std::make_pair(std::string("blue"), Palette::Blue()));
+    namedColors.push_back(std::make_pair(std::string("yellow"), Palette::Yellow()));
+    namedColors.push_back(std::make_pair(std::string("magenta"), Palette::Magenta()));
+    namedColors.push_back(std::make_pair(std::string("cyan"), Palette::Cyan()));
+    namedColors.push_back(std::make_pair(std::string("gray"), Palette::Gray()));
+    namedColors.push_back(std::make_pair(std::string("orange"), Palette::Orange()));
+    namedColors.push_back(std::make_pair(std::string("purple"), Palette::Purple()));
+    namedColors.push_back(std::make_pair(std::string("pink"), Palette::Pink()));
+
+    for (size_t i = 0; i < namedColors.size(); ++i) {
+        double dist = distance(color, namedColors[i].second);
         if (dist < minDist) {
             minDist = dist;
-            closest = pair.first;
+            closest = namedColors[i].first;
         }
     }
-    
     return closest;
 }
 

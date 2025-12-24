@@ -20,6 +20,7 @@
 #include <stdexcept>
 #include <vector>
 #include <map>
+#include <cstdlib>
 
 // ============================================================================
 // DATE CLASS - COMPREHENSIVE DATE HANDLING
@@ -53,7 +54,7 @@ public:
     
     // Get current date
     static Date today() {
-        std::time_t t = std::time(nullptr);
+        std::time_t t = std::time(NULL);
         std::tm* now = std::localtime(&t);
         return Date(now->tm_year + 1900, now->tm_mon + 1, now->tm_mday);
     }
@@ -290,12 +291,11 @@ public:
         } else if (format == "YYYY/MM/DD") {
             return toYMD('/');
         } else if (format == "Month DD, YYYY") {
-            return monthName() + " " + std::to_string(_day) + ", " + std::to_string(_year);
+            std::ostringstream oss; oss << monthName() << " " << _day << ", " << _year; return oss.str();
         } else if (format == "DD Month YYYY") {
-            return std::to_string(_day) + " " + monthName() + " " + std::to_string(_year);
+            std::ostringstream oss; oss << _day << " " << monthName() << " " << _year; return oss.str();
         } else if (format == "Weekday, Month DD, YYYY") {
-            return weekdayName() + ", " + monthName() + " " + 
-                   std::to_string(_day) + ", " + std::to_string(_year);
+            std::ostringstream oss; oss << weekdayName() << ", " << monthName() << " " << _day << ", " << _year; return oss.str();
         }
         return toISO();
     }
@@ -349,11 +349,9 @@ private:
     static Date parseISO(const std::string& str) {
         // Format: YYYY-MM-DD
         if (str.length() < 10) throw std::invalid_argument("Invalid ISO date");
-        
-        int year = std::stoi(str.substr(0, 4));
-        int month = std::stoi(str.substr(5, 2));
-        int day = std::stoi(str.substr(8, 2));
-        
+        int year = atoi(str.substr(0,4).c_str());
+        int month = atoi(str.substr(5,2).c_str());
+        int day = atoi(str.substr(8,2).c_str());
         return Date(year, month, day);
     }
     
@@ -361,15 +359,10 @@ private:
         // Format: DD/MM/YYYY or DD-MM-YYYY
         size_t sep1 = str.find_first_of("/-");
         size_t sep2 = str.find_first_of("/-", sep1 + 1);
-        
-        if (sep1 == std::string::npos || sep2 == std::string::npos) {
-            throw std::invalid_argument("Invalid date format");
-        }
-        
-        int day = std::stoi(str.substr(0, sep1));
-        int month = std::stoi(str.substr(sep1 + 1, sep2 - sep1 - 1));
-        int year = std::stoi(str.substr(sep2 + 1));
-        
+        if (sep1 == std::string::npos || sep2 == std::string::npos) throw std::invalid_argument("Invalid date format");
+        int day = atoi(str.substr(0, sep1).c_str());
+        int month = atoi(str.substr(sep1 + 1, sep2 - sep1 - 1).c_str());
+        int year = atoi(str.substr(sep2 + 1).c_str());
         return Date(year, month, day);
     }
     
@@ -377,30 +370,20 @@ private:
         // Format: MM/DD/YYYY
         size_t sep1 = str.find_first_of("/-");
         size_t sep2 = str.find_first_of("/-", sep1 + 1);
-        
-        if (sep1 == std::string::npos || sep2 == std::string::npos) {
-            throw std::invalid_argument("Invalid date format");
-        }
-        
-        int month = std::stoi(str.substr(0, sep1));
-        int day = std::stoi(str.substr(sep1 + 1, sep2 - sep1 - 1));
-        int year = std::stoi(str.substr(sep2 + 1));
-        
+        if (sep1 == std::string::npos || sep2 == std::string::npos) throw std::invalid_argument("Invalid date format");
+        int month = atoi(str.substr(0, sep1).c_str());
+        int day = atoi(str.substr(sep1 + 1, sep2 - sep1 - 1).c_str());
+        int year = atoi(str.substr(sep2 + 1).c_str());
         return Date(year, month, day);
     }
     
     static Date parseYMD(const std::string& str, char sep) {
         size_t sep1 = str.find(sep);
         size_t sep2 = str.find(sep, sep1 + 1);
-        
-        if (sep1 == std::string::npos || sep2 == std::string::npos) {
-            throw std::invalid_argument("Invalid date format");
-        }
-        
-        int year = std::stoi(str.substr(0, sep1));
-        int month = std::stoi(str.substr(sep1 + 1, sep2 - sep1 - 1));
-        int day = std::stoi(str.substr(sep2 + 1));
-        
+        if (sep1 == std::string::npos || sep2 == std::string::npos) throw std::invalid_argument("Invalid date format");
+        int year = atoi(str.substr(0, sep1).c_str());
+        int month = atoi(str.substr(sep1 + 1, sep2 - sep1 - 1).c_str());
+        int day = atoi(str.substr(sep2 + 1).c_str());
         return Date(year, month, day);
     }
     
@@ -438,59 +421,35 @@ private:
 
 class DateRange {
 public:
-    DateRange(const Date& start, const Date& end) 
-        : _start(start), _end(end) {
-        if (end < start) {
-            throw std::invalid_argument("End date must be after start date");
-        }
+    DateRange(const Date& start, const Date& end) : _start(start), _end(end) {
+        if (end < start) throw std::invalid_argument("End date must be after start date");
     }
-    
+
     const Date& start() const { return _start; }
-    const Date& end() const { return _end; }
-    
-    int days() const {
-        return _end.daysBetween(_start);
-    }
-    
-    bool contains(const Date& date) const {
-        return date >= _start && date <= _end;
-    }
-    
-    bool overlaps(const DateRange& other) const {
-        return _start <= other._end && _end >= other._start;
-    }
-    
-    // Iterator for dates in range
+    const Date& endDate() const { return _end; } // renamed accessor
+
+    int days() const { return _end.daysBetween(_start); }
+    bool contains(const Date& date) const { return date >= _start && date <= _end; }
+    bool overlaps(const DateRange& other) const { return _start <= other._end && _end >= other._start; }
+
     class Iterator {
     public:
-        Iterator(const Date& current, const Date& end) 
-            : _current(current), _end(end) {}
-        
+        Iterator(const Date& current, const Date& end) : _current(current), _end(end) {}
         const Date& operator*() const { return _current; }
         const Date* operator->() const { return &_current; }
-        
-        Iterator& operator++() {
-            _current = _current.addDays(1);
-            return *this;
-        }
-        
-        bool operator!=(const Iterator& other) const {
-            return _current <= _end;
-        }
-        
+        Iterator& operator++() { _current = _current.addDays(1); return *this; }
+        bool operator!=(const Iterator& other) const { return !(_current == other._current); }
     private:
         Date _current;
         Date _end;
     };
-    
+
     Iterator begin() const { return Iterator(_start, _end); }
     Iterator end() const { return Iterator(_end.addDays(1), _end); }
-    
+
     std::vector<Date> toVector() const {
         std::vector<Date> dates;
-        for (const Date& date : *this) {
-            dates.push_back(date);
-        }
+        for (DateRange::Iterator it = begin(); it != end(); ++it) dates.push_back(*it);
         return dates;
     }
 
@@ -569,11 +528,11 @@ namespace DateUtils {
     // Count business days between two dates (Monday-Friday)
     inline int businessDaysBetween(const Date& start, const Date& end) {
         if (end < start) return 0;
-        
         int count = 0;
         DateRange range(start, end);
-        for (const Date& date : range) {
-            if (isWeekday(date)) ++count;
+        for (DateRange::Iterator it = range.begin(); it != range.end(); ++it) {
+            Date d = *it;
+            if (isWeekday(d)) ++count;
         }
         return count;
     }

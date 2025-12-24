@@ -1,4 +1,4 @@
-#include "database_system.hpp"
+#include "Database.hpp"
 #include <iostream>
 
 // Example 1: Basic table creation and rendering
@@ -14,10 +14,26 @@ void example_basic() {
     db.addColumn("Active", ColumnType::BOOLEAN, Alignment::CENTER);
     
     // Add data
-    db.addRow({{"ID", "1"}, {"Name", "Alice"}, {"Score", "95.5"}, {"Active", "true"}});
-    db.addRow({{"ID", "2"}, {"Name", "Bob"}, {"Score", "87.3"}, {"Active", "true"}});
-    db.addRow({{"ID", "3"}, {"Name", "Charlie"}, {"Score", "92.1"}, {"Active", "false"}});
-    db.addRow({{"ID", "4"}, {"Name", "Diana"}, {"Score", "88.7"}, {"Active", "true"}});
+    {
+        std::map<std::string,std::string> r;
+        r["ID"] = "1"; r["Name"] = "Alice"; r["Score"] = "95.5"; r["Active"] = "true";
+        db.addRow(r);
+    }
+    {
+        std::map<std::string,std::string> r;
+        r["ID"] = "2"; r["Name"] = "Bob"; r["Score"] = "87.3"; r["Active"] = "true";
+        db.addRow(r);
+    }
+    {
+        std::map<std::string,std::string> r;
+        r["ID"] = "3"; r["Name"] = "Charlie"; r["Score"] = "92.1"; r["Active"] = "false";
+        db.addRow(r);
+    }
+    {
+        std::map<std::string,std::string> r;
+        r["ID"] = "4"; r["Name"] = "Diana"; r["Score"] = "88.7"; r["Active"] = "true";
+        db.addRow(r);
+    }
     
     // Render with default config
     std::cout << db.render();
@@ -34,10 +50,26 @@ void example_styled() {
     db.addColumn("Stock", ColumnType::INTEGER, Alignment::RIGHT);
     db.addColumn("Status", ColumnType::STRING, Alignment::CENTER);
     
-    db.addRow({{"Product", "Laptop"}, {"Price", "$999.99"}, {"Stock", "15"}, {"Status", "✓"}});
-    db.addRow({{"Product", "Mouse"}, {"Price", "$29.99"}, {"Stock", "150"}, {"Status", "✓"}});
-    db.addRow({{"Product", "Keyboard"}, {"Price", "$79.99"}, {"Stock", "45"}, {"Status", "✓"}});
-    db.addRow({{"Product", "Monitor"}, {"Price", "$349.99"}, {"Stock", "8"}, {"Status", "⚠"}});
+    {
+        std::map<std::string,std::string> r;
+        r["Product"]="Laptop"; r["Price"]="$999.99"; r["Stock"]="15"; r["Status"]="✓";
+        db.addRow(r);
+    }
+    {
+        std::map<std::string,std::string> r;
+        r["Product"]="Mouse"; r["Price"]="$29.99"; r["Stock"]="150"; r["Status"]="✓";
+        db.addRow(r);
+    }
+    {
+        std::map<std::string,std::string> r;
+        r["Product"]="Keyboard"; r["Price"]="$79.99"; r["Stock"]="45"; r["Status"]="✓";
+        db.addRow(r);
+    }
+    {
+        std::map<std::string,std::string> r;
+        r["Product"]="Monitor"; r["Price"]="$349.99"; r["Stock"]="8"; r["Status"]="⚠";
+        db.addRow(r);
+    }
     
     // Custom elegant configuration
     RenderConfig config = RenderConfig::elegant();
@@ -52,47 +84,75 @@ void example_styled() {
 // Example 3: Heavy borders with custom styling
 void example_heavy() {
     std::cout << "\n=== EXAMPLE 3: Heavy Borders ===\n\n";
-    
+
     Database db;
-    
+
     db.addColumn("Rank", ColumnType::INTEGER, Alignment::CENTER);
     db.addColumn("Player", ColumnType::STRING, Alignment::LEFT);
     db.addColumn("Score", ColumnType::INTEGER, Alignment::RIGHT);
-    
-    db.addRow({{"Rank", "🥇"}, {"Player", "Champion"}, {"Score", "9500"}});
-    db.addRow({{"Rank", "🥈"}, {"Player", "Runner-up"}, {"Score", "8900"}});
-    db.addRow({{"Rank", "🥉"}, {"Player", "Third Place"}, {"Score", "8200"}});
-    
+
+    {
+        std::map<std::string,std::string> r;
+        r["Rank"] = "🥇"; r["Player"] = "Champion"; r["Score"] = "9500";
+        db.addRow(r);
+    }
+    {
+        std::map<std::string,std::string> r;
+        r["Rank"] = "🥈"; r["Player"] = "Runner-up"; r["Score"] = "8900";
+        db.addRow(r);
+    }
+    {
+        std::map<std::string,std::string> r;
+        r["Rank"] = "🥉"; r["Player"] = "Third Place"; r["Score"] = "8200";
+        db.addRow(r);
+    }
+
     RenderConfig config;
     config.boxChars = Unicode::BoxChars::heavy();
     config.headerStyle.foreground = Style::Color::BrightMagenta();
     config.headerStyle.bold = true;
     config.cellStyle.foreground = Style::Color::BrightWhite();
     config.padding = 2;
-    
+
     std::cout << db.render(config);
 }
 
 // Example 4: Unicode characters and international text
 void example_unicode() {
     std::cout << "\n=== EXAMPLE 4: Unicode Support ===\n\n";
-    
+
     Database db;
-    
+
     db.addColumn("País", ColumnType::STRING, Alignment::LEFT);
     db.addColumn("Ciudad", ColumnType::STRING, Alignment::LEFT);
     db.addColumn("Población", ColumnType::STRING, Alignment::RIGHT);
-    
-    db.addRow({{"País", "日本"}, {"Ciudad", "東京"}, {"Población", "13.96M"}});
-    db.addRow({{"País", "España"}, {"Ciudad", "Madrid"}, {"Población", "3.27M"}});
-    db.addRow({{"País", "中国"}, {"Ciudad", "上海"}, {"Población", "24.28M"}});
-    db.addRow({{"País", "Россия"}, {"Ciudad", "Москва"}, {"Población", "12.54M"}});
-    
+
+    {
+        std::map<std::string,std::string> r;
+        r["País"] = "日本"; r["Ciudad"] = "東京"; r["Población"] = "13.96M";
+        db.addRow(r);
+    }
+    {
+        std::map<std::string,std::string> r;
+        r["País"] = "España"; r["Ciudad"] = "Madrid"; r["Población"] = "3.27M";
+        db.addRow(r);
+    }
+    {
+        std::map<std::string,std::string> r;
+        r["País"] = "中国"; r["Ciudad"] = "上海"; r["Población"] = "24.28M";
+        db.addRow(r);
+    }
+    {
+        std::map<std::string,std::string> r;
+        r["País"] = "Россия"; r["Ciudad"] = "Москва"; r["Población"] = "12.54M";
+        db.addRow(r);
+    }
+
     RenderConfig config;
     config.boxChars = Unicode::BoxChars::rounded();
     config.headerStyle.foreground = Style::Color::BrightCyan();
     config.headerStyle.bold = true;
-    
+
     std::cout << db.render(config);
 }
 
@@ -114,7 +174,7 @@ void example_csv() {
         db.loadFromCsv("sample_data.csv", true);
         
         // Customize column alignments after loading
-        auto& cols = db.table().columns();
+        std::vector<Column>& cols = db.table().columns();
         if (cols.size() >= 3) {
             cols[2] = Column("Salary", ColumnType::DOUBLE, Alignment::RIGHT);
         }
@@ -140,14 +200,34 @@ void example_queries() {
     db.addColumn("Department", ColumnType::STRING, Alignment::LEFT);
     db.addColumn("Budget", ColumnType::STRING, Alignment::RIGHT);
     
-    db.addRow({{"ID", "1"}, {"Department", "Engineering"}, {"Budget", "$500K"}});
-    db.addRow({{"ID", "2"}, {"Department", "Marketing"}, {"Budget", "$300K"}});
-    db.addRow({{"ID", "3"}, {"Department", "Engineering"}, {"Budget", "$450K"}});
-    db.addRow({{"ID", "4"}, {"Department", "Sales"}, {"Budget", "$400K"}});
-    db.addRow({{"ID", "5"}, {"Department", "Engineering"}, {"Budget", "$550K"}});
+    {
+        std::map<std::string,std::string> r;
+        r["ID"] = "1"; r["Department"] = "Engineering"; r["Budget"] = "$500K";
+        db.addRow(r);
+    }
+    {
+        std::map<std::string,std::string> r;
+        r["ID"] = "2"; r["Department"] = "Marketing"; r["Budget"] = "$300K";
+        db.addRow(r);
+    }
+    {
+        std::map<std::string,std::string> r;
+        r["ID"] = "3"; r["Department"] = "Engineering"; r["Budget"] = "$450K";
+        db.addRow(r);
+    }
+    {
+        std::map<std::string,std::string> r;
+        r["ID"] = "4"; r["Department"] = "Sales"; r["Budget"] = "$400K";
+        db.addRow(r);
+    }
+    {
+        std::map<std::string,std::string> r;
+        r["ID"] = "5"; r["Department"] = "Engineering"; r["Budget"] = "$550K";
+        db.addRow(r);
+    }
     
     // Query for Engineering departments
-    auto results = db.where("Department", "Engineering");
+    std::vector<Row> results = db.where("Department", "Engineering");
     
     std::cout << "Found " << results.size() << " Engineering departments:\n\n";
     
@@ -157,10 +237,13 @@ void example_queries() {
     filteredDb.addColumn("Department", ColumnType::STRING, Alignment::LEFT);
     filteredDb.addColumn("Budget", ColumnType::STRING, Alignment::RIGHT);
     
-    for (const auto& row : results) {
+    for (size_t i = 0; i < results.size(); ++i) {
+        const Row& row = results[i];
         std::map<std::string, std::string> data;
-        for (const auto& pair : row.data()) {
-            data[pair.first] = pair.second;
+        // use row.data() to iterate
+        const std::map<std::string,std::string>& rd = row.data();
+        for (std::map<std::string,std::string>::const_iterator it = rd.begin(); it != rd.end(); ++it) {
+            data[it->first] = it->second;
         }
         filteredDb.addRow(data);
     }
@@ -181,10 +264,26 @@ void example_minimal() {
     db.addColumn("Task", ColumnType::STRING, Alignment::LEFT);
     db.addColumn("Done", ColumnType::BOOLEAN, Alignment::CENTER);
     
-    db.addRow({{"Task", "Design database schema"}, {"Done", "true"}});
-    db.addRow({{"Task", "Implement rendering"}, {"Done", "true"}});
-    db.addRow({{"Task", "Add CSV support"}, {"Done", "true"}});
-    db.addRow({{"Task", "Write documentation"}, {"Done", "false"}});
+    {
+        std::map<std::string,std::string> r;
+        r["Task"] = "Design database schema"; r["Done"] = "true";
+        db.addRow(r);
+    }
+    {
+        std::map<std::string,std::string> r;
+        r["Task"] = "Implement rendering"; r["Done"] = "true";
+        db.addRow(r);
+    }
+    {
+        std::map<std::string,std::string> r;
+        r["Task"] = "Add CSV support"; r["Done"] = "true";
+        db.addRow(r);
+    }
+    {
+        std::map<std::string,std::string> r;
+        r["Task"] = "Write documentation"; r["Done"] = "false";
+        db.addRow(r);
+    }
     
     RenderConfig config = RenderConfig::minimal();
     config.boxChars = Unicode::BoxChars::doubleLine();
@@ -204,15 +303,34 @@ void example_financial() {
     db.addColumn("Profit", ColumnType::STRING, Alignment::RIGHT);
     db.addColumn("Δ", ColumnType::STRING, Alignment::RIGHT);
     
-    db.addRow({{"Quarter", "Q1 2024"}, {"Revenue", "$2.5M"}, {"Expenses", "$1.8M"}, {"Profit", "$700K"}, {"Δ", "+15%"}});
-    db.addRow({{"Quarter", "Q2 2024"}, {"Revenue", "$2.8M"}, {"Expenses", "$1.9M"}, {"Profit", "$900K"}, {"Δ", "+28%"}});
-    db.addRow({{"Quarter", "Q3 2024"}, {"Revenue", "$3.1M"}, {"Expenses", "$2.0M"}, {"Profit", "$1.1M"}, {"Δ", "+22%"}});
-    db.addRow({{"Quarter", "Q4 2024"}, {"Revenue", "$3.4M"}, {"Expenses", "$2.1M"}, {"Profit", "$1.3M"}, {"Δ", "+18%"}});
-    
+    {
+        std::map<std::string,std::string> r;
+        r["Quarter"] = "Q1 2024"; r["Revenue"] = "$2.5M"; r["Expenses"] = "$1.8M"; r["Profit"] = "$700K"; r["Δ"] = "+15%";
+        db.addRow(r);
+    }
+    {
+        std::map<std::string,std::string> r;
+        r["Quarter"] = "Q2 2024"; r["Revenue"] = "$2.8M"; r["Expenses"] = "$1.9M"; r["Profit"] = "$900K"; r["Δ"] = "+28%";
+        db.addRow(r);
+    }
+    {
+        std::map<std::string,std::string> r;
+        r["Quarter"] = "Q3 2024"; r["Revenue"] = "$3.1M"; r["Expenses"] = "$2.0M"; r["Profit"] = "$1.1M"; r["Δ"] = "+22%";
+        db.addRow(r);
+    }
+    {
+        std::map<std::string,std::string> r;
+        r["Quarter"] = "Q4 2024"; r["Revenue"] = "$3.4M"; r["Expenses"] = "$2.1M"; r["Profit"] = "$1.3M"; r["Δ"] = "+18%";
+        db.addRow(r);
+    }
+
     RenderConfig config;
     config.boxChars = Unicode::BoxChars::doubleLine();
     config.headerStyle.foreground = Style::Color::BrightWhite();
-    config.headerStyle.background = Style::Color{42}; // Green background
+    {
+        Style::Color bg(42); // Green background
+        config.headerStyle.background = bg;
+    }
     config.headerStyle.bold = true;
     config.showFooter = true;
     config.footerText = "📊 Annual Growth: +21% | Total Profit: $4.0M";

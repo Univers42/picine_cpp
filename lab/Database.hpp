@@ -21,12 +21,159 @@
 #include <fstream>
 #include <iomanip>
 #include <algorithm>
+#include <stdint.h>
 
 // ============================================================================
 // UNICODE UTILITIES
 // ============================================================================
 
 namespace Unicode {
+    
+    // Decode a single UTF-8 character and return its code point
+    inline uint32_t decodeUTF8(const std::string& str, size_t& index) {
+        uint32_t codepoint = 0;
+        unsigned char c = (unsigned char)str[index];
+        
+        if ((c & 0x80) == 0) {
+            // 1-byte ASCII
+            codepoint = c;
+            index += 1;
+        } else if ((c & 0xE0) == 0xC0) {
+            // 2-byte sequence
+            if (index + 1 < str.size()) {
+                codepoint = ((c & 0x1F) << 6) | ((unsigned char)str[index + 1] & 0x3F);
+            }
+            index += 2;
+        } else if ((c & 0xF0) == 0xE0) {
+            // 3-byte sequence
+            if (index + 2 < str.size()) {
+                codepoint = ((c & 0x0F) << 12) | 
+                           (((unsigned char)str[index + 1] & 0x3F) << 6) | 
+                           ((unsigned char)str[index + 2] & 0x3F);
+            }
+            index += 3;
+        } else if ((c & 0xF8) == 0xF0) {
+            // 4-byte sequence (emoji, etc.)
+            if (index + 3 < str.size()) {
+                codepoint = ((c & 0x07) << 18) | 
+                           (((unsigned char)str[index + 1] & 0x3F) << 12) | 
+                           (((unsigned char)str[index + 2] & 0x3F) << 6) | 
+                           ((unsigned char)str[index + 3] & 0x3F);
+            }
+            index += 4;
+        } else {
+            // Invalid sequence, skip
+            index += 1;
+        }
+        
+        return codepoint;
+    }
+    
+    // Calculate display width of a single Unicode code point
+    inline int codepointWidth(uint32_t cp) {
+        // Combining characters (zero width)
+        if (cp >= 0x0300 && cp <= 0x036F) return 0; // Combining Diacritical Marks
+        if (cp >= 0x1AB0 && cp <= 0x1AFF) return 0; // Combining Diacritical Marks Extended
+        if (cp >= 0x1DC0 && cp <= 0x1DFF) return 0; // Combining Diacritical Marks Supplement
+        if (cp >= 0x20D0 && cp <= 0x20FF) return 0; // Combining Diacritical Marks for Symbols
+        if (cp >= 0xFE20 && cp <= 0xFE2F) return 0; // Combining Half Marks
+        
+        // Control characters
+        if (cp < 0x20 || (cp >= 0x7F && cp < 0xA0)) return 0;
+        
+        // Emoji and special wide characters (2 columns)
+        if (cp >= 0x1F300 && cp <= 0x1F9FF) return 2; // Miscellaneous Symbols and Pictographs, Emoticons, etc.
+        if (cp >= 0x1F000 && cp <= 0x1F2FF) return 2; // Mahjong Tiles, Domino Tiles, Playing Cards
+        if (cp >= 0x1FA00 && cp <= 0x1FAFF) return 2; // Chess Symbols, Symbols and Pictographs Extended-A
+        if (cp >= 0x2600 && cp <= 0x26FF) return 2;   // Miscellaneous Symbols
+        if (cp >= 0x2700 && cp <= 0x27BF) return 2;   // Dingbats
+        if (cp >= 0xFE00 && cp <= 0xFE0F) return 0;   // Variation Selectors (zero width)
+        
+        // CJK Unified Ideographs (Chinese, Japanese, Korean) - 2 columns
+        if (cp >= 0x4E00 && cp <= 0x9FFF) return 2;   // CJK Unified Ideographs
+        if (cp >= 0x3400 && cp <= 0x4DBF) return 2;   // CJK Unified Ideographs Extension A
+        if (cp >= 0x20000 && cp <= 0x2A6DF) return 2; // CJK Unified Ideographs Extension B
+        if (cp >= 0x2A700 && cp <= 0x2B73F) return 2; // CJK Unified Ideographs Extension C
+        if (cp >= 0x2B740 && cp <= 0x2B81F) return 2; // CJK Unified Ideographs Extension D
+        if (cp >= 0x2B820 && cp <= 0x2CEAF) return 2; // CJK Unified Ideographs Extension E
+        if (cp >= 0xF900 && cp <= 0xFAFF) return 2;   // CJK Compatibility Ideographs
+        if (cp >= 0x2F800 && cp <= 0x2FA1F) return 2; // CJK Compatibility Ideographs Supplement
+        
+        // Hangul (Korean)
+        if (cp >= 0xAC00 && cp <= 0xD7AF) return 2;   // Hangul Syllables
+        if (cp >= 0x1100 && cp <= 0x11FF) return 2;   // Hangul Jamo
+        if (cp >= 0x3130 && cp <= 0x318F) return 2;   // Hangul Compatibility Jamo
+        if (cp >= 0xA960 && cp <= 0xA97F) return 2;   // Hangul Jamo Extended-A
+        if (cp >= 0xD7B0 && cp <= 0xD7FF) return 2;   // Hangul Jamo Extended-B
+        
+        // Hiragana and Katakana (Japanese)
+        if (cp >= 0x3040 && cp <= 0x309F) return 2;   // Hiragana
+        if (cp >= 0x30A0 && cp <= 0x30FF) return 2;   // Katakana
+        if (cp >= 0x31F0 && cp <= 0x31FF) return 2;   // Katakana Phonetic Extensions
+        
+        // Arabic (right-to-left, single width but may combine)
+        if (cp >= 0x0600 && cp <= 0x06FF) return 1;   // Arabic
+        if (cp >= 0x0750 && cp <= 0x077F) return 1;   // Arabic Supplement
+        if (cp >= 0x08A0 && cp <= 0x08FF) return 1;   // Arabic Extended-A
+        if (cp >= 0xFB50 && cp <= 0xFDFF) return 1;   // Arabic Presentation Forms-A
+        if (cp >= 0xFE70 && cp <= 0xFEFF) return 1;   // Arabic Presentation Forms-B
+        
+        // Hebrew
+        if (cp >= 0x0590 && cp <= 0x05FF) return 1;   // Hebrew
+        
+        // Devanagari (Hindi, Sanskrit)
+        if (cp >= 0x0900 && cp <= 0x097F) return 1;   // Devanagari
+        if (cp >= 0xA8E0 && cp <= 0xA8FF) return 1;   // Devanagari Extended
+        
+        // Greek
+        if (cp >= 0x0370 && cp <= 0x03FF) return 1;   // Greek and Coptic
+        if (cp >= 0x1F00 && cp <= 0x1FFF) return 1;   // Greek Extended
+        
+        // Cyrillic (Russian, etc.)
+        if (cp >= 0x0400 && cp <= 0x04FF) return 1;   // Cyrillic
+        if (cp >= 0x0500 && cp <= 0x052F) return 1;   // Cyrillic Supplement
+        if (cp >= 0x2DE0 && cp <= 0x2DFF) return 1;   // Cyrillic Extended-A
+        if (cp >= 0xA640 && cp <= 0xA69F) return 1;   // Cyrillic Extended-B
+        
+        // Full-width Latin characters
+        if (cp >= 0xFF01 && cp <= 0xFF5E) return 2;   // Fullwidth ASCII variants
+        
+        // Default: single width for everything else (Latin, ASCII, etc.)
+        return 1;
+    }
+    
+    // Calculate display width of UTF-8 string
+    size_t displayWidth(const std::string& str) {
+        size_t width = 0;
+        size_t index = 0;
+        
+        while (index < str.size()) {
+            uint32_t cp = decodeUTF8(str, index);
+            if (cp > 0) {
+                width += codepointWidth(cp);
+            }
+        }
+        
+        return width;
+    }
+    
+    // Pad string to specific display width
+    std::string pad(const std::string& str, size_t width, char align = 'l') {
+        size_t currentWidth = displayWidth(str);
+        if (currentWidth >= width) return str;
+        
+        size_t padding = width - currentWidth;
+        if (align == 'c') {
+            size_t left = padding / 2;
+            size_t right = padding - left;
+            return std::string(left, ' ') + str + std::string(right, ' ');
+        } else if (align == 'r') {
+            return std::string(padding, ' ') + str;
+        } else {
+            return str + std::string(padding, ' ');
+        }
+    }
+
     struct BoxChars {
         std::string topLeft;
         std::string topRight;
@@ -75,37 +222,6 @@ namespace Unicode {
             return b;
         }
     };
-
-    // Calculate display width of UTF-8 string
-    size_t displayWidth(const std::string& str) {
-        size_t width = 0;
-        for (size_t i = 0; i < str.length(); ) {
-            unsigned char c = str[i];
-            if ((c & 0x80) == 0) { i += 1; width += 1; }
-            else if ((c & 0xE0) == 0xC0) { i += 2; width += 1; }
-            else if ((c & 0xF0) == 0xE0) { i += 3; width += 1; }
-            else if ((c & 0xF8) == 0xF0) { i += 4; width += 2; }
-            else { i += 1; }
-        }
-        return width;
-    }
-    
-    // Pad string to specific display width
-    std::string pad(const std::string& str, size_t width, char align = 'l') {
-        size_t currentWidth = displayWidth(str);
-        if (currentWidth >= width) return str;
-        
-        size_t padding = width - currentWidth;
-        if (align == 'c') {
-            size_t left = padding / 2;
-            size_t right = padding - left;
-            return std::string(left, ' ') + str + std::string(right, ' ');
-        } else if (align == 'r') {
-            return std::string(padding, ' ') + str;
-        } else {
-            return str + std::string(padding, ' ');
-        }
-    }
 }
 
 // ============================================================================
@@ -170,7 +286,6 @@ namespace Style {
 // COLUMN TYPE SYSTEM
 // ============================================================================
 
-/* replace enum class (C++11) with plain enums */
 namespace ColumnType {
     enum Type { STRING = 0, INTEGER = 1, DOUBLE = 2, DATE = 3, BOOLEAN = 4 };
 }
@@ -260,7 +375,6 @@ public:
     size_t columnCount() const { return _columns.size(); }
     size_t rowCount() const { return _rows.size(); }
 
-    // Auto-calculate column widths based on content
     void calculateColumnWidths() {
         for (size_t ci = 0; ci < _columns.size(); ++ci) {
             Column& col = _columns[ci];
@@ -574,18 +688,18 @@ private:
 // ============================================================================
 
 class Database {
- public:
+public:
     Database() {}
- 
+
     void loadFromCsv(const std::string& path, bool hasHeader = true) {
         _table = CsvParser::parse(path, hasHeader);
     }
- 
+
     void addColumn(const std::string& name, ColumnType::Type type = ColumnType::STRING,
                    Alignment::Type align = Alignment::LEFT) {
         _table.addColumn(Column(name, type, align));
     }
- 
+
     void addRow(const std::map<std::string, std::string>& data) {
         Row row;
         for (std::map<std::string, std::string>::const_iterator it = data.begin(); it != data.end(); ++it) {
@@ -593,15 +707,15 @@ class Database {
         }
         _table.addRow(row);
     }
- 
+
     std::string render(const RenderConfig& config = RenderConfig()) {
         TableRenderer renderer(config);
         return renderer.render(_table);
     }
- 
+
     Table& table() { return _table; }
     const Table& table() const { return _table; }
- 
+
     std::vector<Row> where(const std::string& column, const std::string& value) const {
         std::vector<Row> results;
         const std::vector<Row>& rows = _table.rows();
@@ -612,7 +726,7 @@ class Database {
         }
         return results;
     }
- 
+
     size_t count() const { return _table.rowCount(); }
 
 private:

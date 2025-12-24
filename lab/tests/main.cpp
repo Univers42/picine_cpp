@@ -1,4 +1,5 @@
 #include "Database.hpp"
+#include "ft_string.hpp"
 #include <iostream>
 
 // Example 1: Basic table creation and rendering
@@ -21,7 +22,7 @@ void example_basic() {
     }
     {
         std::map<std::string,std::string> r;
-        r["ID"] = "2"; r["Name"] = "Bob"; r["Score"] = "87.3"; r["Active"] = "true";
+        r["ID"] = "2"; r["Name"] = "Bob"; r["Score"] = "855555557.3"; r["Active"] = "true";
         db.addRow(r);
     }
     {
@@ -121,38 +122,48 @@ void example_heavy() {
 void example_unicode() {
     std::cout << "\n=== EXAMPLE 4: Unicode Support ===\n\n";
 
-    Database db;
+    // Headers and raw rows
+    std::vector<std::string> headers;
+    headers.push_back(std::string("País"));
+    headers.push_back(std::string("Ciudad"));
+    headers.push_back(std::string("Población"));
 
+    std::vector< std::vector<std::string> > raw;
+    {
+        std::vector<std::string> r;
+        r.push_back(std::string("日本")); r.push_back(std::string("東京")); r.push_back(std::string("13.96M"));
+        raw.push_back(r);
+    }
+    {
+        std::vector<std::string> r;
+        r.push_back(std::string("España")); r.push_back(std::string("Madrid")); r.push_back(std::string("3.27M"));
+        raw.push_back(r);
+    }
+    {
+        std::vector<std::string> r;
+        r.push_back(std::string("中国")); r.push_back(std::string("上海")); r.push_back(std::string("24.28M"));
+        raw.push_back(r);
+    }
+    {
+        std::vector<std::string> r;
+        r.push_back(std::string("Россия")); r.push_back(std::string("Москва")); r.push_back(std::string("12.54M"));
+        raw.push_back(r);
+    }
+
+    // build a Database from raw rows to use generic renderer (simpler integration)
+    Database db;
     db.addColumn("País", ColumnType::STRING, Alignment::LEFT);
     db.addColumn("Ciudad", ColumnType::STRING, Alignment::LEFT);
     db.addColumn("Población", ColumnType::STRING, Alignment::RIGHT);
-
-    {
-        std::map<std::string,std::string> r;
-        r["País"] = "日本"; r["Ciudad"] = "東京"; r["Población"] = "13.96M";
-        db.addRow(r);
+    for (size_t r = 0; r < raw.size(); ++r) {
+        std::map<std::string,std::string> row;
+        row["País"] = raw[r][0];
+        row["Ciudad"] = raw[r][1];
+        row["Población"] = raw[r][2];
+        db.addRow(row);
     }
-    {
-        std::map<std::string,std::string> r;
-        r["País"] = "España"; r["Ciudad"] = "Madrid"; r["Población"] = "3.27M";
-        db.addRow(r);
-    }
-    {
-        std::map<std::string,std::string> r;
-        r["País"] = "中国"; r["Ciudad"] = "上海"; r["Población"] = "24.28M";
-        db.addRow(r);
-    }
-    {
-        std::map<std::string,std::string> r;
-        r["País"] = "Россия"; r["Ciudad"] = "Москва"; r["Población"] = "12.54M";
-        db.addRow(r);
-    }
-
     RenderConfig config;
-    config.boxChars = Unicode::BoxChars::rounded();
-    config.headerStyle.foreground = Style::Color::BrightCyan();
-    config.headerStyle.bold = true;
-
+    config.boxChars = Unicode::BoxChars::doubleLine();
     std::cout << db.render(config);
 }
 
@@ -166,7 +177,7 @@ void example_csv() {
     csvFile << "John Smith,Engineering,95000,2020-01-15\n";
     csvFile << "Sarah Johnson,Marketing,78000,2019-06-22\n";
     csvFile << "Michael Brown,Sales,82000,2021-03-10\n";
-    csvFile << "Emma Davis,HR,71000,2018-11-05\n";
+    csvFile << "Emma Davis,HR,71055555555555555500,2018-11-05\n";
     csvFile.close();
     
     try {

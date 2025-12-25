@@ -6,51 +6,72 @@ LIB_DIR=/mnt/c/Users/dylan/Shared/picine_cpp/libcpp
 LIBS=-lcpp
 SRC=
 OBJ=$(SRC:.cpp=.o)
-TARGET=.
+OBJ := $(OBJ:.c=.o)
+TARGET=picine_cpp
 
-# default directories to generate Makefiles for (kept for reference)
-GEN_DIRS := . cpp_module00/ex01
-
-# capture positional args passed after "make genmake"
-ARG_DIRS := $(filter-out genmake,$(MAKECMDGOALS))
-DIRS := $(ARG_DIRS)
-
-# Only trigger an error if user invoked "make genmake" without args
-ifneq (,$(filter genmake,$(MAKECMDGOALS)))
-  ifeq ($(ARG_DIRS),)
-    $(error genmake requires at least one directory argument. Usage: make genmake dir1 dir2 ...)
-  endif
+# If INC wasn't provided by env, add common candidate include dirs inside $(LIB_DIR)
+ifeq ($(strip $(INC)),)
+INC := -I$(LIB_DIR) -I$(LIB_DIR)/include -I$(LIB_DIR)/inc
 endif
 
-# create no-op targets for positional args so make doesn't try to build them
-ifeq ($(ARG_DIRS),)
+# If libcpp provides a single top-level header, pre-include it so declarations are available
+ifeq ($(wildcard $(LIB_DIR)/libcpp.h),)
+CPPFLAGS :=
 else
-$(foreach d,$(ARG_DIRS),$(eval $(d): ; @:))
+CPPFLAGS := -include $(LIB_DIR)/libcpp.h
 endif
 
 all: $(TARGET)
 
 $(TARGET): $(OBJ)
 	$(MAKE) -C $(LIB_DIR)
-	$(CXX) $(CXXFLAGS) $(INC) $(OBJ) -o $(TARGET) -L$(LIB_DIR) $(LDFLAGS) $(LIBS)
+	@# prefer linking lib object files if present, else prefer direct lib file, else fallback to -L/-l
+	@libobjs="$$(ls $(LIB_DIR)/*.o 2>/dev/null || true)"; \
+	libfile=""; \
+	if [ -f "$(LIB_DIR)/libcpp.a" ]; then \
+		libfile="$(LIB_DIR)/libcpp.a"; \
+	elif [ -f "$(LIB_DIR)/libcpp.so" ]; then \
+		libfile="$(LIB_DIR)/libcpp.so"; \
+	fi; \
+	if [ -n "$$libobjs" ]; then \
+		$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(OBJ) $$libobjs -o $(TARGET) $(LDFLAGS) $$libfile; \
+	elif [ -n "$$libfile" ]; then \
+		$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(OBJ) -o $(TARGET) $(LDFLAGS) $$libfile; \
+	else \
+		$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(OBJ) -o $(TARGET) -L$(LIB_DIR) $(LDFLAGS) $(LIBS); \
+	fi
 
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) -c $< -o $@
+
+# compile .c as C++ (project uses C sources compiled with C++ toolchain)
+%.o: %.c
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) -x c++ -c $< -o $@
 
 clean:
 	rm -f $(OBJ)
-	$(MAKE) -C libcpp clean || true
-	$(MAKE) -C cpp_module00/ex01 clean || true
 
 fclean: clean
 	rm -f $(TARGET)
 
 re: fclean all
 
-.PHONY: all clean fclean re genmake
-
 genmake:
-	@for d in $(DIRS); do \
-		printf "[GEN] generating Makefile for %s\n" $$d; \
-		./autotools/env.sh autotools "$$d"; \
-	done
+	@if [ -z "$(path)" ]; then \
+		echo "Usage: make genmake path=your/target/dir"; \
+		exit 1; \
+	fi; \
+	PATH_ARG="$(path)"; \
+	if command -v wslpath >/dev/null 2>&1; then \
+		CONV="$$(wslpath -u "$$PATH_ARG" 2>/dev/null || true)"; \
+		if [ -n "$$CONV" ]; then PATH_ARG="$$CONV"; fi; \
+	fi; \
+	if cd "$$PATH_ARG" 2>/dev/null; then \
+		TARGET_PATH="$$(pwd -P)"; \
+	else \
+		echo "Error: could not resolve path '$(path)' to an existing directory"; \
+		exit 1; \
+	fi; \
+	./autotools/env.sh autotools "$$TARGET_PATH"
+
+.PHONY: all clean fclean re

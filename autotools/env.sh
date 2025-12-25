@@ -5,6 +5,26 @@
 TEMPLATE_DIR="${1:-autotools}"
 TARGET_DIR="${2:-.}"
 
+# If TARGET_DIR looks like a Windows path (contains backslashes or drive:), try converting with wslpath
+case "$TARGET_DIR" in
+  *\\*|[A-Za-z]:/*)
+    if command -v wslpath >/dev/null 2>&1; then
+      conv="$$(wslpath -u "$TARGET_DIR" 2>/dev/null || true)"
+      if [ -n "$conv" ]; then
+        TARGET_DIR="$conv"
+      fi
+    fi
+    ;;
+esac
+
+# Resolve TARGET_DIR to an absolute path and ensure it exists
+if [ -d "$TARGET_DIR" ]; then
+    TARGET_DIR="$$(cd "$TARGET_DIR" 2>/dev/null && pwd -P || printf '%s' "$TARGET_DIR")"
+else
+    printf 'Error: target dir "%s" does not exist\n' "$TARGET_DIR" >&2
+    exit 1
+fi
+
 # Base compiler settings
 export CXX="${CXX:-c++}"
 export CXXFLAGS="${CXXFLAGS:--Wall -Wextra -Werror}"
@@ -29,7 +49,7 @@ elif [ -d "${LIBCPP_DIR}/inc" ]; then
     INC_DIR="${LIBCPP_DIR}/inc"
 else
     # if there are header files at lib root, use root; otherwise still use root as fallback
-    if find "${LIBCPP_DIR}" -maxdepth 1 -type f \( -name '*.h' -o -name '*.hpp' \) | read; then
+    if find "${LIBCPP_DIR}" -maxdepth 1 -type f \( -name '*.h' -o -name '*.hpp' \) | grep -q .; then
         INC_DIR="${LIBCPP_DIR}"
     else
         INC_DIR="${LIBCPP_DIR}"

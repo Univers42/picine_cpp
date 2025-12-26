@@ -1,15 +1,14 @@
 #!/bin/sh
-
-# Usage: ./env.sh [template_dir] [target_dir]
-# default template_dir = autotools, default target_dir = .
-TEMPLATE_DIR="${1:-autotools}"
+# Determine script directory (absolute) so templates are found reliably
+script_dir="$(cd "$(dirname "$0")" 2>/dev/null && pwd -P || printf '%s' "$(dirname "$0")")"
+TEMPLATE_DIR="${1:-$script_dir}"
 TARGET_DIR="${2:-.}"
 
 # If TARGET_DIR looks like a Windows path (contains backslashes or drive:), try converting with wslpath
 case "$TARGET_DIR" in
   *\\*|[A-Za-z]:/*)
     if command -v wslpath >/dev/null 2>&1; then
-      conv="$$(wslpath -u "$TARGET_DIR" 2>/dev/null || true)"
+      conv="$(wslpath -u "$TARGET_DIR" 2>/dev/null || true)"
       if [ -n "$conv" ]; then
         TARGET_DIR="$conv"
       fi
@@ -19,9 +18,15 @@ esac
 
 # Resolve TARGET_DIR to an absolute path and ensure it exists
 if [ -d "$TARGET_DIR" ]; then
-    TARGET_DIR="$$(cd "$TARGET_DIR" 2>/dev/null && pwd -P || printf '%s' "$TARGET_DIR")"
+    TARGET_DIR="$(cd "$TARGET_DIR" 2>/dev/null && pwd -P || printf '%s' "$TARGET_DIR")"
 else
     printf 'Error: target dir "%s" does not exist\n' "$TARGET_DIR" >&2
+    exit 1
+fi
+
+# Ensure template file exists
+if [ ! -f "$TEMPLATE_DIR/Makefile.in" ]; then
+    printf 'Error: template "%s/Makefile.in" not found\n' "$TEMPLATE_DIR" >&2
     exit 1
 fi
 

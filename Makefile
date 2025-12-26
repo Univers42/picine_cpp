@@ -61,17 +61,6 @@ genmake:
 		echo "Usage: make genmake path=your/target/dir"; \
 		exit 1; \
 	fi; \
-	PATH_ARG="$(path)"; \
-	if command -v wslpath >/dev/null 2>&1; then \
-		CONV="$$(wslpath -u "$$PATH_ARG" 2>/dev/null || true)"; \
-		if [ -n "$$CONV" ]; then PATH_ARG="$$CONV"; fi; \
-	fi; \
-	if cd "$$PATH_ARG" 2>/dev/null; then \
-		TARGET_PATH="$$(pwd -P)"; \
-	else \
-		echo "Error: could not resolve path '$(path)' to an existing directory"; \
-		exit 1; \
-	fi; \
-	./autotools/env.sh autotools "$$TARGET_PATH"
+	sh "$(CURDIR)/autotools/env.sh" autotools "$(path)"
 
-.PHONY: all clean fclean re
+.PHONY: all clean fclean re genmake

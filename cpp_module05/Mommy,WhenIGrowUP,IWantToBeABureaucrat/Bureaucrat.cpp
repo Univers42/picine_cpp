@@ -28,7 +28,7 @@ const char *Bureaucrat::GradeTooLowException::what() const noexcept
 
 Bureaucrat::Bureaucrat() : _name("Default") , _grade(150) {}
 
-Bureaucrat::Bureaucrat::operator=(const Bureaucrat& other)
+Bureaucrat& Bureaucrat::operator=(const Bureaucrat& other)
 {
 	if (this != &other)
 	{

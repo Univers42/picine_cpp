@@ -4,14 +4,14 @@ INC=-I/mnt/c/Users/dylan/Shared/picine_cpp/libcpp
 LDFLAGS=
 LIB_DIR=/mnt/c/Users/dylan/Shared/picine_cpp/libcpp
 LIBS=-lcpp
-SRC=main.cpp Serializer.cpp 
+SRC=Bureaucrat.cpp main.cpp 
 
 # place object files in a dedicated directory
 OBJDIR ?= obj
 OBJ := $(addprefix $(OBJDIR)/,$(addsuffix .o,$(basename $(SRC))))
 OBJ := $(OBJ)
 
-TARGET=Serialization
+TARGET=Mommy,WhenIGrowUP,IWantToBeABureaucrat
 
 BUILD_LIBCPP ?= 0
 

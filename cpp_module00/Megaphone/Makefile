@@ -1,10 +1,22 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: marvin <marvin@student.42.fr>              +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2026/01/28 17:03:51 by marvin            #+#    #+#              #
+#    Updated: 2026/01/28 18:12:49 by marvin           ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
 CXX=c++
 CXXFLAGS=-Wall -Wextra -Werror
 INC=-I/mnt/c/Users/dylan/Shared/picine_cpp/libcpp
 LDFLAGS=
 LIB_DIR=/mnt/c/Users/dylan/Shared/picine_cpp/libcpp
 LIBS=-lcpp
-SRC=megaphone.cpp 
+SRC=megaphone.cpp
 OBJ=$(SRC:.cpp=.o)
 OBJ := $(OBJ:.c=.o)
 TARGET=ex00
@@ -56,11 +68,14 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all clean fclean re diag
-
 diag:
 	@echo "=== Variables ==="; \
 	printf "CXX=%s\nCXXFLAGS=%s\nINC=%s\nLIB_DIR=%s\nLIBS=%s\nSRC=%s\nOBJ=%s\nTARGET=%s\n" "$(CXX)" "$(CXXFLAGS)" "$(INC)" "$(LIB_DIR)" "$(LIBS)" "$(SRC)" "$(OBJ)" "$(TARGET)"; \
 	echo; echo "=== libcpp directory listing ==="; ls -la "$(LIB_DIR)" || true; \
 	echo; echo "=== Generated Makefile (this dir) ==="; sed -n '1,200p' Makefile 2>/dev/null || echo "(no Makefile)"; \
 	echo; echo "=== Dry-run build ==="; $(MAKE) -n
+
+norminette:
+	./checker.py -- -std=c++98 -I. $(wildcard, *.c)
+
+.PHONY: all clean fclean re diag

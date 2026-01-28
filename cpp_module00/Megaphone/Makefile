@@ -1,81 +1,149 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    Makefile                                           :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: marvin <marvin@student.42.fr>              +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2026/01/28 17:03:51 by marvin            #+#    #+#              #
-#    Updated: 2026/01/28 18:12:49 by marvin           ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
+# Project Configuration
+CXX = c++
+CXXFLAGS = -Wall -Wextra -Werror
+INC = -I/mnt/c/Users/dylan/Shared/picine_cpp/libcpp
+LDFLAGS =
+LIB_DIR = /mnt/c/Users/dylan/Shared/picine_cpp/libcpp
 
-CXX=c++
-CXXFLAGS=-Wall -Wextra -Werror
-INC=-I/mnt/c/Users/dylan/Shared/picine_cpp/libcpp
-LDFLAGS=
-LIB_DIR=/mnt/c/Users/dylan/Shared/picine_cpp/libcpp
-LIBS=-lcpp
-SRC=megaphone.cpp
-OBJ=$(SRC:.cpp=.o)
+# Source and Build Directories
+SRC = megaphone.cpp
+BUILD_DIR = build
+OBJ_DIR = $(BUILD_DIR)/obj
+BIN_DIR = $(BUILD_DIR)/bin
+TARGET = $(BIN_DIR)/ex00
+
+# Object Files
+OBJ = $(SRC:.cpp=.o)
 OBJ := $(OBJ:.c=.o)
-TARGET=ex00
+OBJ := $(addprefix $(OBJ_DIR)/,$(OBJ))
 
-# If INC wasn't provided by env, add common candidate include dirs inside $(LIB_DIR)
+# Google Test Configuration
+GTEST_DIR = ../../vendor/gtest
+GTEST_INC_CANDIDATES = $(GTEST_DIR)/include $(GTEST_DIR)/googletest/include $(GTEST_DIR)
+GTEST_INC := $(shell for d in $(GTEST_INC_CANDIDATES); do [ -d "$$d" ] && { echo -I$$d; break; } done)
+ifeq ($(strip $(GTEST_INC)),)
+GTEST_INC = -I$(GTEST_DIR)/include
+endif
+GTEST_LIBS = -L$(GTEST_DIR)/build/lib -L$(GTEST_DIR)/lib -lgtest -lgtest_main -pthread
+
+# Checker Script
+CHECKER = /mnt/c/Users/dylan/Shared/picine_cpp/vendor/scripts/checker.py
+
+# Test Configuration
+TEST_SRCS := $(wildcard tests/*.cpp)
+TEST_BINS := $(patsubst tests/%.cpp,$(BIN_DIR)/%,$(TEST_SRCS))
+TEST_OBJS := $(patsubst tests/%.cpp,$(OBJ_DIR)/tests/%.o,$(TEST_SRCS))
+
+# Auto-detect include directories if not set
 ifeq ($(strip $(INC)),)
 INC := -I$(LIB_DIR) -I$(LIB_DIR)/include -I$(LIB_DIR)/inc
 endif
 
-# If libcpp provides a single top-level header, pre-include it so declarations are available
-ifeq ($(wildcard $(LIB_DIR)/libcpp.h),)
 CPPFLAGS :=
-else
-CPPFLAGS := -include $(LIB_DIR)/libcpp.h
-endif
 
+# Colors and Formatting
+RESET = \033[0m
+BOLD = \033[1m
+DIM = \033[2m
+GREEN = \033[92m
+CYAN = \033[96m
+YELLOW = \033[93m
+GRAY = \033[90m
+RED = \033[91m
+
+# Progress tracking
+TOTAL_SRCS := $(words $(SRC))
+COMPILED := 0
+
+# Spinner frames
+SPINNER = ⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏
+
+# Main targets
 all: $(TARGET)
 
-$(TARGET): $(OBJ)
-	$(MAKE) -C $(LIB_DIR)
-	@# prefer linking lib object files if present, else prefer direct lib file, else fallback to -L/-l
-	@libobjs="$$(ls $(LIB_DIR)/*.o 2>/dev/null || true)"; \
-	libfile=""; \
-	if [ -f "$(LIB_DIR)/libcpp.a" ]; then \
-		libfile="$(LIB_DIR)/libcpp.a"; \
-	elif [ -f "$(LIB_DIR)/libcpp.so" ]; then \
-		libfile="$(LIB_DIR)/libcpp.so"; \
-	fi; \
-	if [ -n "$$libobjs" ]; then \
-		$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(OBJ) $$libobjs -o $(TARGET) $(LDFLAGS) $$libfile; \
-	elif [ -n "$$libfile" ]; then \
-		$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(OBJ) -o $(TARGET) $(LDFLAGS) $$libfile; \
-	else \
-		$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(OBJ) -o $(TARGET) -L$(LIB_DIR) $(LDFLAGS) $(LIBS); \
+$(TARGET): $(OBJ) | $(BIN_DIR)
+	@printf "  $(DIM)linking$(RESET)      $(CYAN)$(notdir $@)$(RESET)\n"
+	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(OBJ) -o $@ $(LDFLAGS) $(LIBS)
+	@printf "\n  $(GREEN)●$(RESET) $(BOLD)Build complete$(RESET) $(DIM)→ $@$(RESET)\n\n"
+
+$(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
+	@$(eval COMPILED:=$(shell echo $$(($(COMPILED)+1))))
+	@printf "  $(DIM)compiling$(RESET)    $(CYAN)%-30s$(RESET)\n" "$(notdir $<)"
+	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) -c $< -o $@
+
+$(OBJ_DIR)/%.o: %.c | $(OBJ_DIR)
+	@$(eval COMPILED:=$(shell echo $$(($(COMPILED)+1))))
+	@printf "  $(DIM)compiling$(RESET)    $(CYAN)%-30s$(RESET)\n" "$(notdir $<)"
+	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) -x c++ -c $< -o $@
+
+$(OBJ_DIR)/tests/%.o: tests/%.cpp | $(OBJ_DIR)/tests
+	@printf "  $(DIM)compiling$(RESET)    $(CYAN)%-30s$(RESET)\n" "$(notdir $<)"
+	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(GTEST_INC) -I. -c $< -o $@
+
+# Build each test binary
+$(BIN_DIR)/%: $(OBJ_DIR)/tests/%.o $(OBJ) | $(BIN_DIR)
+	@printf "  $(DIM)linking$(RESET)      $(CYAN)%-30s$(RESET)\n" "$(notdir $@)"
+	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(OBJ) $< -o $@ $(GTEST_LIBS) $(LDFLAGS) $(LIBS)
+	@printf "  $(GREEN)●$(RESET) $(BOLD)Test build complete$(RESET) $(DIM)→ $@$(RESET)\n"
+
+# test: build all test binaries
+test: gtest $(TEST_BINS)
+
+# Google Test
+gtest:
+	@if [ ! -d "$(GTEST_DIR)/build" ]; then \
+		printf "  $(DIM)creating$(RESET)     $(YELLOW)gtest build directory$(RESET)\n"; \
+		mkdir -p "$(GTEST_DIR)/build"; \
+	fi
+	@if [ ! -f "$(GTEST_DIR)/lib/libgtest.a" ] || [ ! -f "$(GTEST_DIR)/lib/libgtest_main.a" ]; then \
+		printf "  $(DIM)building$(RESET)     $(YELLOW)Google Test$(RESET)\n"; \
+		cd "$(GTEST_DIR)/build" && cmake .. > /dev/null 2>&1 && $(MAKE) > /dev/null 2>&1; \
+		mkdir -p "$(GTEST_DIR)/lib"; \
+		cp "$(GTEST_DIR)/build/lib/libgtest.a" "$(GTEST_DIR)/lib/" 2>/dev/null || true; \
+		cp "$(GTEST_DIR)/build/lib/libgtest_main.a" "$(GTEST_DIR)/lib/" 2>/dev/null || true; \
+		printf "  $(GREEN)●$(RESET) Google Test ready\n\n"; \
 	fi
 
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) -c $< -o $@
-
-# compile .c as C++ (project uses C sources compiled with C++ toolchain)
-%.o: %.c
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) -x c++ -c $< -o $@
-
+# Clean targets
 clean:
-	rm -f $(OBJ)
+	@if [ -d "$(OBJ_DIR)" ]; then \
+		printf "  $(DIM)cleaning$(RESET)     $(YELLOW)object files$(RESET)\n"; \
+		rm -rf $(OBJ_DIR); \
+	fi
 
 fclean: clean
-	rm -f $(TARGET)
+	@if [ -d "$(BIN_DIR)" ]; then \
+		printf "  $(DIM)cleaning$(RESET)     $(YELLOW)binaries$(RESET)\n"; \
+		rm -rf $(BIN_DIR); \
+	fi
+	@if [ -d "$(BUILD_DIR)" ]; then \
+		rmdir $(BUILD_DIR) 2>/dev/null || true; \
+	fi
+	@printf "  $(GREEN)●$(RESET) Clean complete\n\n"
 
 re: fclean all
 
+# Diagnostics
 diag:
-	@echo "=== Variables ==="; \
-	printf "CXX=%s\nCXXFLAGS=%s\nINC=%s\nLIB_DIR=%s\nLIBS=%s\nSRC=%s\nOBJ=%s\nTARGET=%s\n" "$(CXX)" "$(CXXFLAGS)" "$(INC)" "$(LIB_DIR)" "$(LIBS)" "$(SRC)" "$(OBJ)" "$(TARGET)"; \
-	echo; echo "=== libcpp directory listing ==="; ls -la "$(LIB_DIR)" || true; \
-	echo; echo "=== Generated Makefile (this dir) ==="; sed -n '1,200p' Makefile 2>/dev/null || echo "(no Makefile)"; \
-	echo; echo "=== Dry-run build ==="; $(MAKE) -n
+	@printf "\n$(BOLD)$(CYAN)Build Configuration$(RESET)\n"
+	@printf "$(DIM)━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━$(RESET)\n"
+	@printf "  $(DIM)CXX$(RESET)          $(CYAN)$(CXX)$(RESET)\n"
+	@printf "  $(DIM)CXXFLAGS$(RESET)     $(CYAN)$(CXXFLAGS)$(RESET)\n"
+	@printf "  $(DIM)INC$(RESET)          $(CYAN)$(INC)$(RESET)\n"
+	@printf "  $(DIM)LIB_DIR$(RESET)      $(CYAN)$(LIB_DIR)$(RESET)\n"
+	@printf "  $(DIM)SRC$(RESET)          $(CYAN)$(SRC)$(RESET)\n"
+	@printf "  $(DIM)OBJ$(RESET)          $(CYAN)$(OBJ)$(RESET)\n"
+	@printf "  $(DIM)TARGET$(RESET)       $(CYAN)$(TARGET)$(RESET)\n"
+	@printf "$(DIM)━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━$(RESET)\n\n"
 
 norminette:
-	./checker.py -- -std=c++98 -I. $(wildcard, *.c)
+	$(CHECKER) $(shell find . -path ./tests -prune -o -type f \( -name '*.c' -o -name '*.cpp' -o -name '*.cc' -o -name '*.cxx' -o -name '*.h' -o -name '*.hpp' -o -name '*.hh' \) -print) -- -std=c++98 -I.
 
-.PHONY: all clean fclean re diag
+# Directory creation
+$(OBJ_DIR) $(BIN_DIR):
+	@mkdir -p $@
+
+$(OBJ_DIR)/tests:
+	@mkdir -p $@
+
+.PHONY: all clean fclean re diag norminette test gtest

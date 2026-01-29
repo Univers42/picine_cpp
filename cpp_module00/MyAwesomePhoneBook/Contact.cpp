@@ -1,32 +1,36 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Contact.cpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/28 20:05:02 by marvin            #+#    #+#             */
+/*   Updated: 2026/01/29 00:44:52 by marvin           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "Contact.hpp"
 #include <algorithm>
 #include <cctype>
 
-const std::string &Contact::emptyString()
-{
-	static std::string s;
-	return (s);
+const std::string& Contact::emptyString() {
+  static std::string s;
+
+  return (s);
 }
 
-Contact::Contact()
-	: idxField(0)
-{
-	// initialize fields to empty strings (std::string default ctor already does that)
+Contact::Contact() : idxField(0) {}
+
+void Contact::setField(Field f, const std::string& v) {
+  int idx = static_cast<int>(f);
+  if (idx > 0 && idx < static_cast<int>(FIELD_COUNT)) this->fields[idx] = v;
 }
 
-void Contact::setField(Field f, const std::string &v)
-{
-	int idx = static_cast<int>(f);
-	// Only accept valid defined slots (1..SLOT_COUNT-1). Ignore SLOT_NULL.
-	if (idx > 0 && idx < static_cast<int>(SLOT_COUNT))
-		this->fields[idx] = v;
-	// else ignore invalid field or SLOT_NULL
-}
+const std::string Contact::getField(Field f) const {
+  int idx = static_cast<int>(f);
 
-const std::string Contact::getField(Field f) const
-{
-	int idx = static_cast<int>(f);
-	if (idx >= 0 && idx < static_cast<int>(SLOT_COUNT))
-		return this->fields[idx];
-	return Contact::emptyString();
+  if (idx >= 0 && idx < static_cast<int>(FIELD_COUNT))
+    return (this->fields[idx]);
+  return (Contact::emptyString());
 }

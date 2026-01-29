@@ -1,69 +1,55 @@
-// ************************************************************************** //
-//                                                                            //
-//                Account.hpp for GlobalBanksters United                //
-//                Created on  : Thu Nov 20 19:43:15 1989                      //
-//                Last update : Wed Jan 04 14:54:06 1992                      //
-//                Made by : Brad "Buddy" McLane <bm@gbu.com>                  //
-//                                                                            //
-// ************************************************************************** //
-
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Account.hpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/29 01:19:21 by marvin            #+#    #+#             */
+/*   Updated: 2026/01/29 01:47:36 by marvin           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #pragma once
 #ifndef __ACCOUNT_H__
 #define __ACCOUNT_H__
 
-// ************************************************************************** //
-//                               Account Class                                //
-// ************************************************************************** //
+// diff <(sed 's/^\[[^]]*\] //' out.log)
+// <(sed 's/^\[[^]]*\] //' 19920104_091532.log)
 
 class Account {
+ public:
+  typedef Account t;
 
+  static int getNbAccounts(void);
+  static int getTotalAmount(void);
+  static int getNbDeposits(void);
+  static int getNbWithdrawals(void);
+  static void displayAccountsInfos(void);
 
-public:
+  /**Marking single-parameter constructors explicit
+   * prevents unintended implicit conversions.
+   */
+  explicit Account(int initial_deposit);
+  ~Account(void);
+  void makeDeposit(int deposit);
+  bool makeWithdrawal(int withdrawal);
+  int checkAmount(void) const;
+  void displayStatus(void) const;
 
-	typedef Account		t;
+ private:
+  static int _nbAccounts;
+  static int _totalAmount;
+  static int _totalNbDeposits;
+  static int _totalNbWithdrawals;
 
-	static int	getNbAccounts( void );
-	static int	getTotalAmount( void );
-	static int	getNbDeposits( void );
-	static int	getNbWithdrawals( void );
-	static void	displayAccountsInfos( void );
+  static void _displayTimestamp(void);
 
-	Account( int initial_deposit );
-	~Account( void );
-
-	void	makeDeposit( int deposit );
-	bool	makeWithdrawal( int withdrawal );
-	int		checkAmount( void ) const;
-	void	displayStatus( void ) const;
-
-
-private:
-
-	static int	_nbAccounts;
-	static int	_totalAmount;
-	static int	_totalNbDeposits;
-	static int	_totalNbWithdrawals;
-
-	static void	_displayTimestamp( void );
-
-	int				_accountIndex;
-	int				_amount;
-	int				_nbDeposits;
-	int				_nbWithdrawals;
-
-	Account( void );
-
+  int _accountIndex;
+  int _amount;
+  int _nbDeposits;
+  int _nbWithdrawals;
+  Account(void);
 };
-
-
-
-// ************************************************************************** //
-// vim: set ts=4 sw=4 tw=80 noexpandtab:                                      //
-// -*- indent-tabs-mode:t;                                                   -*-
-// -*- mode: c++-mode;                                                       -*-
-// -*- fill-column: 75; comment-column: 75;                                  -*-
-// ************************************************************************** //
-
 
 #endif /* __ACCOUNT_H__ */

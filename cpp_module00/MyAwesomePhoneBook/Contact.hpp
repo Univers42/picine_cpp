@@ -1,19 +1,39 @@
-#ifndef CONTACT_HPP
-#define CONTACT_HPP
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Contact.hpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/28 19:58:06 by marvin            #+#    #+#             */
+/*   Updated: 2026/01/29 01:08:13 by marvin           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#ifndef CPP_MODULE00_MYAWESOMEPHONEBOOK_CONTACT_HPP_
+#define CPP_MODULE00_MYAWESOMEPHONEBOOK_CONTACT_HPP_
 
 #include <string>
 
-class Contact
-{
-	public:
-		enum Field {SLOT_NULL = 0, SLOT_Name, SLOT_LASTNAME, SLOT_NICKNAME, SLOT_PHONE, SLOT_SECRET, SLOT_COUNT};
-		Contact();
-		void						setField(Field f, const std::string &v);
-        const std::string			getField(Field f) const;
-    private:
-		int							idxField;
-		std::string					fields[SLOT_COUNT];
-		static const std::string	&emptyString();
+class Contact {
+ public:
+  enum Field {
+    FIELD_NULL = 0,
+    FIELD_NAME,
+    FIELD_LASTNAME,
+    FIELD_NICKNAME,
+    FIELD_PHONE,
+    FIELD_SECRET,
+    FIELD_COUNT
+  };
+  Contact();
+  void setField(Field f, const std::string& v);
+  const std::string getField(Field f) const;
+
+ private:
+  int idxField;
+  std::string fields[FIELD_COUNT];
+  static const std::string& emptyString();
 };
 
-#endif // CONTACT_HPP
+#endif  // CPP_MODULE00_MYAWESOMEPHONEBOOK_CONTACT_HPP_

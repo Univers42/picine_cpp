@@ -6,7 +6,7 @@
 /*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 16:05:43 by marvin            #+#    #+#             */
-/*   Updated: 2026/01/28 18:50:54 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/28 19:16:15 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,10 +35,8 @@ std::string megaphone_from_argv(int n, char* args[]) {
   return out;
 }
 
-__attribute__((weak))
-int main(int argc, char** argv) {
+__attribute__((weak)) int main(int argc, char** argv) {
   std::string out = megaphone_from_argv(argc - 1, argv + 1);
   print_line(out);
   return 0;
 }
-

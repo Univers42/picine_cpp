@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Zombie.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/30 05:45:10 by dlesieur          #+#    #+#             */
+/*   Updated: 2026/01/30 05:45:11 by dlesieur         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "Zombie.hpp"
 #include <iostream>
 
@@ -28,7 +40,7 @@ Zombie::~Zombie()
 void Zombie::announce(void)
 {
 	// professional, clean announcement
-	std::cout << C_CYAN << name << C_RESET 
+	std::cout << C_CYAN << name << C_RESET
 	          << ": BraiiiiiiinnnzzzZ..." << std::endl;
 }
 

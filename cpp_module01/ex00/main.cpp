@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/30 05:45:01 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/01/30 05:45:02 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/01/30 06:14:02 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,13 +18,44 @@
 
 Zombie  *newZombie( const std::string& name );
 void    randomChump( const std::string& name );
+void    heap_approach();
+void    stack_approach();
+void    scope_demo();
 
+/**
+ * PURPOSE: lifetime is controlled manually.
+ * We use heap when the  object must outlive the current scope,
+ * when we need dynamic lifetime, or when allocating large resourcs.
+ * We always remember to delete (or use smart pointers) to avoid leaks.
+ */
+void heap_approach()
+{
+  Zombie *zombie = newZombie("HeapZombie");
+  zombie->announce();
+  delete zombie;
+}
+
+/**
+ * PURPOSE: lifetime is tied to scope.  we use stack when the object is
+ * short-lived, small, and only needed inside the current function - allocation
+ * is cheap and exception-safe.
+ */
+void stack_approach()
+{
+  Zombie zombie("StackZombie");
+  zombie.announce();
+}
+
+/**
+ * Quick demonstration of the two approaches and when to pick each
+ *
+ */
 int main(void)
 {
-	std::cout << Zombie::C_CYAN
-	          << "Zombie Memory Management Demo\n"
-	          << "-----------------------------\n"
-	          << Zombie::C_RESET << std::endl;
+	// Quick demonstration of the two approaches and when to pick each.
+	scope_demo();
+	stack_approach(); // automatic lifetime
+	heap_approach();  // dynamic lifetime
 
 	Zombie	*zombie;
 	const std::string	list[] =

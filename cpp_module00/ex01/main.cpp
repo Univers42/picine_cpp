@@ -6,61 +6,71 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 15:15:45 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/01/29 16:40:58 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/02/28 15:43:41 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cctype>
-#include <cstring>
 #include <iostream>
 #include <string>
 #include "PhoneBook.hpp"
 
-#define PAT_SPACE "\t\n\r\v\f "
+#define PAT_SPACE " \t\n\r\v\f"
+
+// ── UI Styling Macros ────────────────────────────────────────────────────────
+#define C_RESET   "\033[0m"
+#define C_BOLD    "\033[1m"
+#define C_DIM     "\033[2m"
+#define C_CYAN    "\033[36m"
+#define C_YELLOW  "\033[33m"
 
 std::string strtolower(const std::string& in) {
   std::string out;
-
   for (std::size_t i = 0; i < in.size(); ++i) {
-    unsigned char ch = static_cast<unsigned char>(in[i]);
-    out.push_back(static_cast<char>(std::tolower(ch)));
+    out.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(in[i]))));
   }
   return out;
 }
 
-void trim_inplace(std::string& s) {
-  s.erase(0, s.find_first_not_of(PAT_SPACE));
-  size_t end = s.find_last_not_of(PAT_SPACE);
-  if (end != std::string::npos)
-    s.erase(end + 1);
-  else
-    s.clear();
-}
-
 std::string trim(const std::string& s) {
   size_t start = s.find_first_not_of(PAT_SPACE);
+  if (start == std::string::npos) return "";
   size_t end = s.find_last_not_of(PAT_SPACE);
-
-  if (start == std::string::npos) return ("");
-  return (s.substr(start, end - start + 1));
+  return s.substr(start, end - start + 1);
 }
 
-int main(void) {
+int main() {
   std::string input;
   PhoneBook pb;
-  input = "";
+
+  // Professional Welcome Banner
+  std::cout << C_BOLD << C_CYAN << "╔══════════════════════════════════════╗\n";
+  std::cout << "║         MY AWESOME PHONEBOOK         ║\n";
+  std::cout << "╚══════════════════════════════════════╝\n" << C_RESET;
+  std::cout << C_DIM << "Commands: " << C_YELLOW << "ADD" << C_DIM << ", "
+            << C_YELLOW << "SEARCH" << C_DIM << ", " << C_YELLOW << "SEED"
+            << C_DIM << ", " << C_YELLOW << "EXIT\n" << C_RESET;
+
   while (true) {
-    std::cout << "$> " << std::flush;
-    if (!std::getline(std::cin, input))
+    // Professional styled prompt
+    std::cout << "\n" << C_BOLD << C_CYAN << "PhoneBook" << C_RESET << " > " << std::flush;
+
+    // Catch Ctrl+D securely
+    if (!std::getline(std::cin, input)) {
+      std::cout << std::endl;
       break;
-    else if (strtolower(trim(input)) == "add")
+    }
+
+    std::string cmd = strtolower(trim(input));
+
+    if (cmd == "add")
       pb.add();
-    else if (strtolower(trim(input)) == "search")
+    else if (cmd == "search")
       pb.search();
-    else if (strtolower(trim(input)) == "seed")
+    else if (cmd == "seed")
       pb.seed();
-    else if (strtolower(trim(input)) == "exit")
+    else if (cmd == "exit")
       break;
   }
-  return (0);
+  return 0;
 }

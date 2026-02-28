@@ -6,191 +6,238 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 01:07:41 by marvin            #+#    #+#             */
-/*   Updated: 2026/01/29 20:51:45 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/02/28 15:48:07 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "PhoneBook.hpp"
-#include <algorithm>
 #include <cctype>
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
-#include <string>
-#include "Contact.hpp"
 
-/**
- * Constructor
- */
-PhoneBook::PhoneBook() : cap(8), size(0), count(0) {
-  // there is no additional work after reinitialization
-}
+// ── UI Styling Macros ────────────────────────────────────────────────────────
+#define C_RESET   "\033[0m"
+#define C_BOLD    "\033[1m"
+#define C_DIM     "\033[2m"
+#define C_CYAN    "\033[36m"
+#define C_YELLOW  "\033[33m"
+#define C_GREEN   "\033[32m"
+#define C_RED     "\033[31m"
 
-/**
- * Helper to show a field as a 10-char column (truncate with '.' if needed)
- */
+// Unicode Box Drawing Characters
+#define BOX_TOP "┌──────────┬──────────┬──────────┬──────────┐"
+#define BOX_MID "├──────────┼──────────┼──────────┼──────────┤"
+#define BOX_BOT "└──────────┴──────────┴──────────┴──────────┘"
+#define V_BAR   "│"
+// ─────────────────────────────────────────────────────────────────────────────
+
+PhoneBook::PhoneBook() : cap(MAX_CONTACT), size(0), count(0) {}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
 static std::string formatField(const std::string& s) {
-  return (s.size() > 10 ? s.substr(0, 8) + "." : s);
+  return (s.size() > 10 ? s.substr(0, 9) + "." : s);
 }
 
-// helper: return true if string is empty or contains only whitespace
+// Custom algorithm to perfectly center text within a 10-character boundary
+static std::string centerField(const std::string& s, int width = 10) {
+  if (s.length() >= static_cast<size_t>(width)) return s.substr(0, width);
+  int pad_left = (width - s.length()) / 2;
+  int pad_right = width - s.length() - pad_left;
+  return std::string(pad_left, ' ') + s + std::string(pad_right, ' ');
+}
+
 static bool is_blank(const std::string& s) {
   for (std::size_t i = 0; i < s.size(); ++i)
-    if (!std::isspace(static_cast<unsigned char>(s[i]))) return (false);
-  return (true);
+    if (!std::isspace(static_cast<unsigned char>(s[i]))) return false;
+  return true;
 }
 
-void PhoneBook::seed(void) {
-  int loaded;
+// Official Phone Validation Algorithm (France, Spain, & Universal E.164)
+static bool isValidPhoneNumber(const std::string& phone) {
+  std::string cleaned;
+
+  // 1. Clean the input (allow spaces, dots, and hyphens, but strip them out)
+  for (size_t i = 0; i < phone.length(); ++i) {
+    if (std::isdigit(phone[i]) || (i == 0 && phone[i] == '+')) {
+      cleaned += phone[i];
+    } else if (phone[i] != ' ' && phone[i] != '-' && phone[i] != '.') {
+      return false; // Rejects letters and special symbols instantly
+    }
+  }
+
+  if (cleaned.empty() || cleaned == "+") return false;
+
+  // 2. French Telecom Rules (ARCEP)
+  // Local: 10 digits starting with '0'. Intl: +33 followed by 9 digits.
+  bool isFR = (cleaned.length() == 10 && cleaned[0] == '0') ||
+              (cleaned.length() == 12 && cleaned.substr(0, 3) == "+33");
+
+  // 3. Spanish Telecom Rules (CNMC)
+  // Local: 9 digits starting with 6, 7, 8, or 9. Intl: +34 followed by 9 digits.
+  bool isES = (cleaned.length() == 9 && (cleaned[0] == '6' || cleaned[0] == '7' || cleaned[0] == '8' || cleaned[0] == '9')) ||
+              (cleaned.length() == 12 && cleaned.substr(0, 3) == "+34");
+
+  // 4. Universal E.164 Standard (Fallback)
+  // Must be between 9 and 15 digits total.
+  bool isE164 = true;
+  size_t digit_count = 0;
+  for (size_t i = 0; i < cleaned.length(); i++) {
+    if (std::isdigit(cleaned[i])) digit_count++;
+  }
+  if (digit_count < 9 || digit_count > 15) isE164 = false;
+
+  // Contact is valid if it matches France, Spain, or the Universal standard
+  return isFR || isES || isE164;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+void PhoneBook::seed() {
   int i;
   const char* db[][5] = {
-      {"Alice", "Dupont", "Al", "0123456789", "loves cats"},
-      {"Bob", "Martin", "Bobby", "+33123456789", "afraid of heights"},
-      {"Carol", "Durand", "Caz", "0667788990", "secret piano"},
-      {"Dave", "Petit", "D", "0789012345", "collects stamps"},
-      {"Eve", "Moreau", "Ev", "0498765432", "hates spinach"}};
-  const int n = sizeof(db) / sizeof(db[0]);
+      {"Alice", "Smith", "Al", "06 12 34 56 78", "French local"},
+      {"Maximilian", "Von-Trapp", "Maxi", "+33-6-11-22-33-44", "French Intl"},
+      {"O'Connor", "John-Paul", "JP", "612 345 678", "Spanish local"},
+      {"..........", "----------", "________", "+34 699 888 777", "Spanish Intl"},
+      {"Short", "Cut", "S", "+1 (800) 123-4567", "Universal standard"},
+      {"1234567890", "0987654321", "Numbers", "01.23.45.67.89", "Dotted format"}};
+  const int n = 6;
 
-  loaded = (n < this->cap) ? n : this->cap;
-  for (i = 0; i < loaded; ++i) {
+  for (i = 0; i < n && i < this->cap; ++i) {
     this->contact[i].setField(Contact::FIELD_NAME, db[i][0]);
     this->contact[i].setField(Contact::FIELD_LASTNAME, db[i][1]);
     this->contact[i].setField(Contact::FIELD_NICKNAME, db[i][2]);
     this->contact[i].setField(Contact::FIELD_PHONE, db[i][3]);
     this->contact[i].setField(Contact::FIELD_SECRET, db[i][4]);
   }
-  this->count = loaded;
-  this->size = loaded % this->cap;
+  this->count = i;
+  this->size = i % this->cap;
+  std::cout << C_GREEN << "Phonebook seeded with " << i << " telecom-verified contacts." << C_RESET << "\n";
 }
 
-void PhoneBook::search(void) {
+void PhoneBook::search() const {
   if (!this->cap || this->count == 0) {
-    std::cout << "No contacts to search." << std::endl;
+    std::cout << C_YELLOW << "No contacts to search." << C_RESET << std::endl;
     return;
   }
-  // print header
-  std::cout << std::setw(10) << "index" << "|" << std::setw(10) << "first_name"
-            << "|" << std::setw(10) << "last_name" << "|" << std::setw(10)
-            << "nickname" << std::endl;
-  for (int i = 0; i < this->count; ++i) {
-    std::string fn =
-        formatField(this->contact[i].getField(Contact::FIELD_NAME));
-    std::string ln =
-        formatField(this->contact[i].getField(Contact::FIELD_LASTNAME));
-    std::string nn =
-        formatField(this->contact[i].getField(Contact::FIELD_NICKNAME));
-    std::cout << std::setw(10) << i << "|" << std::setw(10) << fn << "|"
-              << std::setw(10) << ln << "|" << std::setw(10) << nn << std::endl;
-  }
 
-  // Prompt repeatedly for index after showing all contacts; empty line cancels
+  // Print Beautiful Header with Perfectly Centered Titles
+  std::cout << "\n" << C_DIM << BOX_TOP << C_RESET << std::endl;
+  std::cout << C_DIM << V_BAR << C_RESET
+            << C_BOLD << C_CYAN << centerField("index") << C_RESET << C_DIM << V_BAR << C_RESET
+            << C_BOLD << C_CYAN << centerField("first name") << C_RESET << C_DIM << V_BAR << C_RESET
+            << C_BOLD << C_CYAN << centerField("last name") << C_RESET << C_DIM << V_BAR << C_RESET
+            << C_BOLD << C_CYAN << centerField("nickname") << C_RESET << C_DIM << V_BAR << C_RESET
+            << std::endl;
+  std::cout << C_DIM << BOX_MID << C_RESET << std::endl;
+
+  for (int i = 0; i < this->count; ++i) {
+    std::cout << C_DIM << V_BAR << C_RESET
+              << C_YELLOW << std::right << std::setw(10) << i << C_RESET << C_DIM << V_BAR << C_RESET
+              << std::left << std::setw(10) << formatField(this->contact[i].getField(Contact::FIELD_NAME)) << C_DIM << V_BAR << C_RESET
+              << std::left << std::setw(10) << formatField(this->contact[i].getField(Contact::FIELD_LASTNAME)) << C_DIM << V_BAR << C_RESET
+              << std::left << std::setw(10) << formatField(this->contact[i].getField(Contact::FIELD_NICKNAME)) << C_DIM << V_BAR << C_RESET
+              << std::endl;
+  }
+  std::cout << C_DIM << BOX_BOT << C_RESET << std::endl;
+
   std::string input;
   while (true) {
-    std::cout << "Enter index to display (empty to cancel): ";
+    std::cout << C_BOLD << "\nEnter index to display " << C_DIM << "(empty to cancel): " << C_RESET;
     if (!std::getline(std::cin, input)) {
-      std::cout << "Aborted." << std::endl;
+      std::cout << "\nAborted." << std::endl;
       return;
     }
-    // trim
+
     size_t start = input.find_first_not_of(" \t\n\r\v\f");
-    if (start == std::string::npos) {
-      // empty -> cancel
-      return;
-    }
+    if (start == std::string::npos) return;
     size_t end = input.find_last_not_of(" \t\n\r\v\f");
     input = input.substr(start, end - start + 1);
 
-    // check numeric
     bool ok = !input.empty();
     for (std::size_t k = 0; k < input.size() && ok; ++k)
       if (!std::isdigit(static_cast<unsigned char>(input[k]))) ok = false;
+
     if (!ok) {
-      std::cout << "Invalid index." << std::endl;
+      std::cout << C_RED << "Invalid index. Must be a number." << C_RESET << std::endl;
       continue;
     }
 
     int idx = std::atoi(input.c_str());
     if (idx < 0 || idx >= this->count) {
-      std::cout << "Invalid index." << std::endl;
+      std::cout << C_RED << "Index out of range." << C_RESET << std::endl;
       continue;
     }
 
-    // Display all fields of the selected contact, one per line
-    std::cout << "First Name: "
-              << this->contact[idx].getField(Contact::FIELD_NAME) << std::endl;
-    std::cout << "Last Name: "
-              << this->contact[idx].getField(Contact::FIELD_LASTNAME)
-              << std::endl;
-    std::cout << "Nickname: "
-              << this->contact[idx].getField(Contact::FIELD_NICKNAME)
-              << std::endl;
-    std::cout << "Phone: " << this->contact[idx].getField(Contact::FIELD_PHONE)
-              << std::endl;
-    std::cout << "Secret: "
-              << this->contact[idx].getField(Contact::FIELD_SECRET)
-              << std::endl;
+    std::cout << "\n" << C_BOLD << C_CYAN << "── Contact #" << idx << " ──" << C_RESET << std::endl;
+    std::cout << C_DIM << "First Name : " << C_RESET << this->contact[idx].getField(Contact::FIELD_NAME) << std::endl;
+    std::cout << C_DIM << "Last Name  : " << C_RESET << this->contact[idx].getField(Contact::FIELD_LASTNAME) << std::endl;
+    std::cout << C_DIM << "Nickname   : " << C_RESET << this->contact[idx].getField(Contact::FIELD_NICKNAME) << std::endl;
+    std::cout << C_DIM << "Phone      : " << C_RESET << this->contact[idx].getField(Contact::FIELD_PHONE) << std::endl;
+    std::cout << C_DIM << "Secret     : " << C_RESET << this->contact[idx].getField(Contact::FIELD_SECRET) << std::endl;
     return;
   }
 }
 
-void PhoneBook::add(void) {
-  std::string name;
-  std::string lastName;
-  std::string nickName;
-  std::string phoneNumber;
-  std::string darkestSecret;
+void PhoneBook::add() {
+  std::string name, lastName, nickName, phoneNumber, darkestSecret;
 
-  // Read required fields; if any read fails or is empty/blank, abort add.
+  std::cout << C_CYAN << "── New Contact ──" << C_RESET << std::endl;
+
   std::cout << "Enter the name: ";
   if (!std::getline(std::cin, name) || is_blank(name)) return;
   std::cout << "Enter the last name: ";
   if (!std::getline(std::cin, lastName) || is_blank(lastName)) return;
   std::cout << "Enter the nick name: ";
   if (!std::getline(std::cin, nickName) || is_blank(nickName)) return;
-  std::cout << "Enter the phone number: ";
-  if (!std::getline(std::cin, phoneNumber) || is_blank(phoneNumber)) return;
+
+  // Smart Phone Number Prompt Loop
+  while (true) {
+    std::cout << "Enter the phone number: ";
+    if (!std::getline(std::cin, phoneNumber)) return;
+    if (is_blank(phoneNumber)) return;
+
+    if (isValidPhoneNumber(phoneNumber)) {
+      break; // Valid! Exit the loop.
+    } else {
+      std::cout << C_RED << "Invalid format! Try local (e.g. 06... or 6...) or intl (+33..., +34...)\n" << C_RESET;
+    }
+  }
+
   std::cout << "Enter the darkest secret: ";
   if (!std::getline(std::cin, darkestSecret) || is_blank(darkestSecret)) return;
 
-  this->contact[size].setField(Contact::FIELD_NAME, name);
-  this->contact[size].setField(Contact::FIELD_LASTNAME, lastName);
-  this->contact[size].setField(Contact::FIELD_NICKNAME, nickName);
-  this->contact[size].setField(Contact::FIELD_PHONE, phoneNumber);
-  this->contact[size].setField(Contact::FIELD_SECRET, darkestSecret);
+  this->contact[this->size].setField(Contact::FIELD_NAME, name);
+  this->contact[this->size].setField(Contact::FIELD_LASTNAME, lastName);
+  this->contact[this->size].setField(Contact::FIELD_NICKNAME, nickName);
+  this->contact[this->size].setField(Contact::FIELD_PHONE, phoneNumber);
+  this->contact[this->size].setField(Contact::FIELD_SECRET, darkestSecret);
+
   this->size = (this->size + 1) % this->cap;
   if (this->count < this->cap) this->count++;
+
+  std::cout << C_GREEN << "Contact saved successfully!" << C_RESET << std::endl;
 }
 
-// little trick here to quit carefully we need to call the namespace std
-// to avoid infinite recursion
-void PhoneBook::exit(void) { std::exit(EXIT_SUCCESS); }
-
-int PhoneBook::getCount() const { return (this->count); }
+int PhoneBook::getCount() const { return this->count; }
 
 const Contact& PhoneBook::getContact(int idx) const {
-  if (this->count == 0) {
+  if (this->count == 0 || idx < 0) {
     static Contact dummy;
     return dummy;
   }
-  if (idx < 0) {
-    return this->contact[0];
-  }
-  if (idx >= this->count) {
-    return this->contact[this->count - 1];
-  }
+  if (idx >= this->count) return this->contact[this->count - 1];
   return this->contact[idx];
 }
 
-// Insert a contact programmatically; returns false if any required field empty
 bool PhoneBook::pushContact(const Contact& c) {
-  const std::string& n = c.getField(Contact::FIELD_NAME);
-  const std::string& ln = c.getField(Contact::FIELD_LASTNAME);
-  const std::string& nn = c.getField(Contact::FIELD_NICKNAME);
-  const std::string& ph = c.getField(Contact::FIELD_PHONE);
-  const std::string& sec = c.getField(Contact::FIELD_SECRET);
-
-  if (is_blank(n) || is_blank(ln) || is_blank(nn) || is_blank(ph) ||
-      is_blank(sec))
+  if (is_blank(c.getField(Contact::FIELD_NAME)) ||
+      is_blank(c.getField(Contact::FIELD_LASTNAME)) ||
+      is_blank(c.getField(Contact::FIELD_NICKNAME)) ||
+      !isValidPhoneNumber(c.getField(Contact::FIELD_PHONE)) || // Protect backend pushes too
+      is_blank(c.getField(Contact::FIELD_SECRET)))
     return false;
   this->contact[this->size] = c;
   this->size = (this->size + 1) % this->cap;

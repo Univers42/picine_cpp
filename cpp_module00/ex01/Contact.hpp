@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 19:58:06 by marvin            #+#    #+#             */
-/*   Updated: 2026/01/29 15:15:48 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/02/28 15:19:21 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,20 +18,19 @@
 class Contact {
  public:
   enum Field {
-    FIELD_NULL = 0,
-    FIELD_NAME,
+    FIELD_NAME = 0,
     FIELD_LASTNAME,
     FIELD_NICKNAME,
     FIELD_PHONE,
     FIELD_SECRET,
     FIELD_COUNT
   };
+
   Contact();
   void setField(Field f, const std::string& v);
-  const std::string getField(Field f) const;
+  const std::string& getField(Field f) const;
 
  private:
-  int idxField;
   std::string fields[FIELD_COUNT];
   static const std::string& emptyString();
 };

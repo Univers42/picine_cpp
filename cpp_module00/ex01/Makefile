@@ -1,188 +1,154 @@
-# Remote URLs for vendor dependencies
-GTEST_URL := https://github.com/google/googletest.git
-LIBCPP_URL := git@github.com:Univers42/libcpp.git
-SCRIPTS_URL := git@github.com:Univers42/scripts.git
+# Project Configuration
+CXX = c++
+CXXFLAGS = -Wall -Wextra -Werror
+INC = 
+LDFLAGS = 
+LIB_DIR = 
+LIBS = 
 
-# Variables
-CXX := c++
-CXXFLAGS := -Wall -Wextra -Werror
-# Only include root .cpp files in SRCS (not tests/*.cpp)
-SRCS := Contact.cpp PhoneBook.cpp main.cpp
-NAME := main
-BUILD_DIR := build
-BIN_DIR := $(BUILD_DIR)/bin
-OBJ_DIR := $(BUILD_DIR)/obj
-TARGET := $(BIN_DIR)/$(NAME)
-INCS_DIR := -I.
+# Add conditional -L flag only when LIB_DIR is set
+LIBDIR_FLAG := $(if $(strip ),-L,)
 
-# Vendor directories (relative to module root)
-VENDOR_DIR := ../vendor
-GTEST_DIR := $(VENDOR_DIR)/gtest
-LIBCPP_DIR := $(VENDOR_DIR)/libcpp
-SCRIPTS_DIR := $(VENDOR_DIR)/scripts
-GTEST_LIB := $(GTEST_DIR)/lib/libgtest.a
-GTEST_MAIN_LIB := $(GTEST_DIR)/lib/libgtest_main.a
-GTEST_INC := -I$(GTEST_DIR)/include -I$(GTEST_DIR)/googletest/include
+# Source files (auto-detected or provided)
+SRC_LIST = Contact.cpp PhoneBook.cpp main.cpp
 
-# Test sources and binaries
-TEST_SRCS := $(wildcard tests/*.cpp)
-TEST_BINS := $(patsubst tests/%.cpp,$(BIN_DIR)/%,$(TEST_SRCS))
-TEST_OBJS := $(patsubst tests/%.cpp,$(OBJ_DIR)/tests/%.o,$(TEST_SRCS))
+# Build directories
+BUILD_DIR = build
+OBJ_DIR = $(BUILD_DIR)/obj
+BIN_DIR = $(BUILD_DIR)/bin
 
-RM := rm -rf
-# Object files
-OBJS := $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SRCS))
-# Exclude main.o for test linking
-OBJS_NO_MAIN := $(filter-out $(OBJ_DIR)/main.o,$(OBJS))
+# CRITICAL FIX: Isolate the Python target injection so rules compile to the right folder
+EXEC_BIN = $(BIN_DIR)/ex01
 
-CXXSTD98 := -std=c++98
-CXXSTD17 := -std=c++17
+# Object files from SRC_LIST
+OBJ := $(addprefix $(OBJ_DIR)/,$(addsuffix .o,$(basename $(SRC_LIST))))
 
-# Colors and Formatting
+# Exclude main.o from the object list so tests don't get double main() functions
+OBJ_NO_MAIN := $(filter-out %/main.o %/Main.o,$(OBJ))
+
+# Google Test Configuration
+GTEST_DIR = ../../vendor/gtest
+GTEST_INC_CANDIDATES = ../../vendor/gtest/include ../../vendor/gtest/googletest/include ../../vendor/gtest
+GTEST_INC := $(shell for d in $(GTEST_INC_CANDIDATES); do [ -d "$$d" ] && { echo -I$$d; break; } done)
+ifeq ($(strip $(GTEST_INC)),)
+GTEST_INC = -I../../vendor/gtest/include
+endif
+GTEST_LIBS = -L../../vendor/gtest/build/lib -L../../vendor/gtest/lib -lgtest -lgtest_main -pthread
+
+# Checker Script
+CHECKER = /path/to/checker.py
+
+# Test Configuration
+TEST_SRCS := $(wildcard tests/*.cpp tests/*.c)
+TEST_BINS := $(foreach f,,$(BIN_DIR)/$(basename $(notdir $(f))))
+
+# libcpp control flag
+LCPP ?= 0
+
+# Auto-detect include directories
+ifeq ($(strip ),)
+ifeq ($(LCPP),0)
+INC :=
+else
+INC := -I -I/include -I/inc
+endif
+endif
+
+# Pre-include libcpp header
+ifeq ($(LCPP),0)
+CPPFLAGS :=
+else
+ifeq ($(wildcard /libcpp.h),)
+CPPFLAGS :=
+else
+CPPFLAGS := -include /libcpp.h
+endif
+endif
+
+# Colors
 RESET = \033[0m
 BOLD = \033[1m
 DIM = \033[2m
 GREEN = \033[92m
 CYAN = \033[96m
 YELLOW = \033[93m
-GRAY = \033[90m
-RED = \033[91m
 
-# Default target: build only the object files (no linking)
-all: objs_only
+# ── Main targets ──────────────────────────────────────────────────────────────
+all: $(EXEC_BIN)
 
-objs_only: $(OBJS)
-	@printf "  $(GREEN)●$(RESET) $(BOLD)All object files built (no binaries).$(RESET)\n"
+$(EXEC_BIN): $(OBJ) | $(BIN_DIR)
+	@printf "  $(DIM)linking$(RESET)      $(CYAN)$(notdir $@)$(RESET)\n"
+	@if [ "$(LCPP)" != "0" ]; then $(MAKE) -C ; fi
+	@libfile=""; \
+	if [ -f "/libcpp.a" ]; then libfile="/libcpp.a"; \
+	elif [ -f "/libcpp.so" ]; then libfile="/libcpp.so"; fi; \
+	if [ -n "$$libfile" ]; then \
+		c++ -Wall -Wextra -Werror $(CPPFLAGS)  $(OBJ) -o $@  $$libfile; \
+	else \
+		c++ -Wall -Wextra -Werror $(CPPFLAGS)  $(OBJ) -o $@ $(LIBDIR_FLAG)  ; \
+	fi
+	@printf "\n  $(GREEN)●$(RESET) $(BOLD)Build complete$(RESET) $(DIM)→ $@$(RESET)\n\n"
 
-# Main program build (explicit, always c++98)
-.PHONY: main
-main: $(OBJ_DIR)/main.o $(filter-out $(OBJ_DIR)/main.o,$(OBJS)) | $(BIN_DIR)
-	@printf "  $(DIM)linking$(RESET)      $(CYAN)main$(RESET)\n"
-	@$(CXX) $(CXXFLAGS) -std=c++98 $^ -o $(BIN_DIR)/main
-	@printf "\n  $(GREEN)●$(RESET) $(BOLD)Main program built$(RESET) $(DIM)→ $(BIN_DIR)/main$(RESET)\n\n"
+# Run target to easily execute the root program
+run: $(EXEC_BIN)
+	@printf "  $(CYAN)Running $(EXEC_BIN)...$(RESET)\n\n"
+	@./$(EXEC_BIN)
 
-# Implicit rule for object files
+# Compile main sources
 $(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
 	@mkdir -p $(dir $@)
 	@printf "  $(DIM)compiling$(RESET)    $(CYAN)%-30s$(RESET)\n" "$(notdir $<)"
-	@$(CXX) $(CXXFLAGS) $(CXXSTD98) $(INCS_DIR) -c $< -o $@
+	@c++ -Wall -Wextra -Werror $(CPPFLAGS)  -c $< -o $@
 
-# Directory creation
-$(BIN_DIR) $(OBJ_DIR):
-	@mkdir -p $@
+$(OBJ_DIR)/%.o: %.c | $(OBJ_DIR)
+	@mkdir -p $(dir $@)
+	@printf "  $(DIM)compiling$(RESET)    $(CYAN)%-30s$(RESET)\n" "$(notdir $<)"
+	@c++ -Wall -Wextra -Werror $(CPPFLAGS)  -x c++ -c $< -o $@
 
-# Test build: ensure vendor, gtest, and libcpp are present
-.PHONY: test
-
-test: vendor $(GTEST_LIB) $(GTEST_MAIN_LIB) $(TEST_BINS)
-
-# Build all test binaries
-$(BIN_DIR)/%: $(OBJ_DIR)/tests/%.o $(OBJS_NO_MAIN) $(GTEST_LIB) $(GTEST_MAIN_LIB) | $(BIN_DIR)
-	@printf "  $(DIM)linking test$(RESET)   $(CYAN)%-30s$(RESET)\n" "$(notdir $@)"
-	@$(CXX) $(CXXFLAGS) $(CXXSTD17) $^ -o $@ $(GTEST_INC) -L$(GTEST_DIR)/lib -lgtest -lgtest_main -pthread 2>&1
-	@printf "  $(GREEN)●$(RESET) $(BOLD)Test build complete$(RESET) $(DIM)→ $@$(RESET)\n"
-
-# Implicit rule for test object files
+# ── Test targets ──────────────────────────────────────────────────────────────
+# Compile test sources
 $(OBJ_DIR)/tests/%.o: tests/%.cpp | $(OBJ_DIR)/tests
 	@mkdir -p $(dir $@)
 	@printf "  $(DIM)compiling test$(RESET) $(CYAN)%-30s$(RESET)\n" "$(notdir $<)"
-	@$(CXX) $(CXXFLAGS) $(CXXSTD17) $(INCS_DIR) $(GTEST_INC) -c $< -o $@
+	@c++ -Wall -Wextra -Werror $(CPPFLAGS)  $(GTEST_INC) -I. -c $< -o $@
 
-$(OBJ_DIR)/tests:
-	@mkdir -p $@
+# Link each test binary: Uses OBJ_NO_MAIN to avoid conflicts!
+$(BIN_DIR)/%: $(OBJ_DIR)/tests/%.o $(OBJ_NO_MAIN) | $(BIN_DIR)
+	@printf "  $(DIM)linking test$(RESET)   $(CYAN)%-30s$(RESET)\n" "$(notdir $@)"
+	@c++ -Wall -Wextra -Werror $(CPPFLAGS)  $(OBJ_NO_MAIN) $< -o $@ $(GTEST_LIBS)  
+	@printf "  $(GREEN)●$(RESET) $(BOLD)Test build complete$(RESET) $(DIM)→ $@$(RESET)\n"
 
-# Vendor setup
-.PHONY: vendor
-vendor: $(VENDOR_DIR) $(GTEST_DIR) $(LIBCPP_DIR) $(SCRIPTS_DIR)
+test: gtest 
+	@printf "\n  $(GREEN)●$(RESET) Built $(words ) test(s)\n"
+	@for test_bin in ; do \
+		echo "  $(CYAN)Executing $$test_bin...$(RESET)"; \
+		./$$test_bin || exit 1; \
+	done
 
-$(VENDOR_DIR):
-	@mkdir -p $@
-
-$(GTEST_DIR): | $(VENDOR_DIR)
-	@if [ ! -d "$@" ]; then git clone $(GTEST_URL) $@; fi
-	@mkdir -p $@/build
-
-$(LIBCPP_DIR): | $(VENDOR_DIR)
-	@if [ ! -d "$@" ]; then git clone $(LIBCPP_URL) $@; fi
-
-$(SCRIPTS_DIR): | $(VENDOR_DIR)
-	@if [ ! -d "$@" ]; then git clone $(SCRIPTS_URL) $@; fi
-
-# Build Google Test static libraries if missing
-$(GTEST_LIB) $(GTEST_MAIN_LIB): | $(GTEST_DIR)
-	@if [ ! -f "$(GTEST_LIB)" ] || [ ! -f "$(GTEST_MAIN_LIB)" ]; then \
-		cd $(GTEST_DIR)/build && cmake .. && $(MAKE) && \
-		mkdir -p ../lib && \
-		cp lib/libgtest.a ../lib/ && \
-		cp lib/libgtest_main.a ../lib/; \
+# Google Test build helper
+gtest:
+	@if [ ! -d "../../vendor/gtest/build" ]; then \
+		mkdir -p "../../vendor/gtest/build"; \
 	fi
-
-# Python virtual environment for diagnostics
-VENV_DIR := .venv
-VENV_PY := $(VENV_DIR)/bin/python3
-VENV_PIP := $(VENV_DIR)/bin/pip3
-VENV_ACT := . $(VENV_DIR)/bin/activate
-
-.PHONY: virt_env shut_virt_env diagnostic
-
-virt_env:
-	@if [ ! -d $(VENV_DIR) ]; then \
-		printf "  $(DIM)creating$(RESET)     $(YELLOW)python venv$(RESET)\n"; \
-		python3 -m venv $(VENV_DIR); \
+	@if [ ! -f "../../vendor/gtest/lib/libgtest.a" ] || [ ! -f "../../vendor/gtest/lib/libgtest_main.a" ]; then \
+		printf "  $(DIM)building$(RESET)     $(YELLOW)Google Test$(RESET)\n"; \
+		cd "../../vendor/gtest/build" && cmake .. > /dev/null 2>&1 && $(MAKE) > /dev/null 2>&1; \
+		mkdir -p "../../vendor/gtest/lib"; \
+		cp "../../vendor/gtest/build/lib/libgtest.a" "../../vendor/gtest/lib/" 2>/dev/null || true; \
+		cp "../../vendor/gtest/build/lib/libgtest_main.a" "../../vendor/gtest/lib/" 2>/dev/null || true; \
 	fi
-	@printf "  $(DIM)installing$(RESET)   $(YELLOW)python tools$(RESET)\n"
-	@$(VENV_PIP) install --upgrade pip > /dev/null 2>&1
-	@$(VENV_PIP) install clang-format clang-tidy cppcheck cpplint > /dev/null 2>&1
-	@printf "  $(GREEN)●$(RESET) $(BOLD)Python venv ready$(RESET)\n"
-
-shut_virt_env:
-	@if [ -d $(VENV_DIR) ]; then \
-		printf "  $(DIM)removing$(RESET)     $(YELLOW)python venv$(RESET)\n"; \
-		rm -rf $(VENV_DIR); \
-		printf "  $(GREEN)●$(RESET) $(BOLD)Python venv removed$(RESET)\n"; \
-	fi
-
-diagnostic: virt_env vendor
-	@bash -c '. $(VENV_DIR)/bin/activate && python3 ../vendor/scripts/checker.py $(SRCS) -- -std=c++98 -I.'
 
 # Clean targets
-.PHONY: clean fclean re
 clean:
-	@if [ -d "$(OBJ_DIR)" ]; then \
-		printf "  $(DIM)cleaning$(RESET)     $(YELLOW)object files$(RESET)\n"; \
-		$(RM) -r $(OBJ_DIR); \
-	fi
+	@rm -rf $(OBJ_DIR)
 
-fclean:
-	@if [ -d "$(BUILD_DIR)" ]; then \
-		printf "  $(DIM)cleaning$(RESET)     $(YELLOW)build directory$(RESET)\n"; \
-		$(RM) -r $(BUILD_DIR); \
-	fi
-	@if [ -d $(VENV_DIR) ]; then \
-		printf "  $(DIM)removing$(RESET)     $(YELLOW)python venv$(RESET)\n"; \
-		$(RM) -rf $(VENV_DIR); \
-	fi
-	@if [ -d $(VENDOR_DIR) ]; then \
-		printf "  $(DIM)removing$(RESET)     $(YELLOW)vendor directory$(RESET)\n"; \
-		$(RM) -rf $(VENDOR_DIR); \
-	fi
-	@printf "  $(GREEN)●$(RESET) $(BOLD)Full clean complete$(RESET)\n"
+fclean: clean
+	@rm -rf $(BUILD_DIR)
 
 re: fclean all
 
-# Help
-.PHONY: help
-help:
-	@echo "Usage: make [all|test|clean|fclean|re|help]"
-	@echo "  all   - build main program only (no vendor deps)"
-	@echo "  test  - build and run tests (with vendor deps)"
-	@echo "  clean - remove object files"
-	@echo "  fclean- remove all build files"
-	@echo "  re    - clean and rebuild main"
+# Directory creation
+$(OBJ_DIR) $(BIN_DIR) $(OBJ_DIR)/tests:
+	@mkdir -p $@
 
-.PHONY: auto_src
-
-auto_src:
-	@srcs=`find . -maxdepth 2 -name "*.cpp" | sed 's|\./||' | tr '\n' ' ' | sed 's/ *$$//'`; \
-	sed -i.bak "/^SRCS :=.*/c\SRCS := $$srcs" Makefile; \
-	printf "  $(GREEN)●$(RESET) $(BOLD)SRCS updated in Makefile:$(RESET) SRCS := $$srcs\n"
+.PHONY: all run clean fclean re test gtest

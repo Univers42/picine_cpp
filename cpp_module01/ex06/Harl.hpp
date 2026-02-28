@@ -6,26 +6,27 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/30 05:44:54 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/01/30 06:43:37 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/02/28 17:45:26 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef __HARL_HPP__
-# define __HARL_HPP__
+#ifndef HARL_HPP
+# define HARL_HPP
 
-class   Harl
-{
-	public:
-		typedef void (Harl::*FuncPtr)(void);
-		enum { LVL_DEBUG, LVL_INFO, LVL_WARNING, LVL_ERROR, LVL_COUNT };
-		Harl();
-		~Harl();
-		void	complain( std::string level );
-	private:
-		void	debug( void );
-		void	info( void );
-		void	warning( void );
-		void	error( void );
+# include <string>
+# include <iostream>
+
+class Harl {
+ public:
+    Harl();
+    ~Harl();
+    void complain(std::string level);
+
+ private:
+    void debug(void);
+    void info(void);
+    void warning(void);
+    void error(void);
 };
 
-#endif // __HARL_HPP__
+#endif

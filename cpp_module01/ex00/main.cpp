@@ -5,74 +5,44 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/01/30 05:45:01 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/01/30 06:14:02 by dlesieur         ###   ########.fr       */
+/*   Created: 2026/02/28 16:00:20 by dlesieur          #+#    #+#             */
+/*   Updated: 2026/02/28 16:17:28 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Zombie.hpp"
-#include <cstdlib>
-#include <ctime>
-#include <string>
-#include <iostream>
 
-Zombie  *newZombie( const std::string& name );
-void    randomChump( const std::string& name );
-void    heap_approach();
-void    stack_approach();
-void    scope_demo();
+int main(void) {
+	std::cout << C_BOLD << C_MAGENTA << "\n=== 1. TESTING STACK ALLOCATION (randomChump) ===" << C_RESET << std::endl;
+	std::cout << C_YELLOW << "-> Calling randomChump(\"StackRunner\")" << C_RESET << std::endl;
+	randomChump("StackRunner");
+	std::cout << C_DIM << "-> Notice how StackRunner was automatically destroyed right after announcing itself!" << C_RESET << std::endl;
 
-/**
- * PURPOSE: lifetime is controlled manually.
- * We use heap when the  object must outlive the current scope,
- * when we need dynamic lifetime, or when allocating large resourcs.
- * We always remember to delete (or use smart pointers) to avoid leaks.
- */
-void heap_approach()
-{
-  Zombie *zombie = newZombie("HeapZombie");
-  zombie->announce();
-  delete zombie;
-}
+	std::cout << C_BOLD << C_MAGENTA << "\n=== 2. TESTING HEAP ALLOCATION (newZombie) ===" << C_RESET << std::endl;
+	std::cout << C_YELLOW << "-> Calling newZombie(\"HeapWalker\")" << C_RESET << std::endl;
+	Zombie* heapWalker = newZombie("HeapWalker");
 
-/**
- * PURPOSE: lifetime is tied to scope.  we use stack when the object is
- * short-lived, small, and only needed inside the current function - allocation
- * is cheap and exception-safe.
- */
-void stack_approach()
-{
-  Zombie zombie("StackZombie");
-  zombie.announce();
-}
+	std::cout << C_YELLOW << "-> Making HeapWalker announce itself from main scope:" << C_RESET << std::endl;
+	heapWalker->announce();
 
-/**
- * Quick demonstration of the two approaches and when to pick each
- *
- */
-int main(void)
-{
-	// Quick demonstration of the two approaches and when to pick each.
-	scope_demo();
-	stack_approach(); // automatic lifetime
-	heap_approach();  // dynamic lifetime
+	std::cout << C_YELLOW << "-> Deleting HeapWalker manually:" << C_RESET << std::endl;
+	delete heapWalker; // Zombies must be destroyed when you no longer need them[cite: 136].
+	std::cout << C_DIM << "-> HeapWalker is now completely destroyed." << C_RESET << std::endl;
 
-	Zombie	*zombie;
-	const std::string	list[] =
-	{
-		"Elena",
-		"Gabriel",
-		"Juan",
-		"Cris",
-		"Susana"
-	};
+	std::cout << C_BOLD << C_MAGENTA << "\n=== 3. TESTING EDGE CASES ===" << C_RESET << std::endl;
 
-	std::srand(static_cast<unsigned int>(std::time(NULL)));
-	const size_t n = sizeof(list) / sizeof(list[0]);
-	zombie = newZombie("Charlie");
-	zombie->announce();
-	for (size_t i = 0; i < n; i++)
-		randomChump(list[std::rand() % n]);
-	delete zombie;
-	return (0);
+	std::cout << C_YELLOW << "\n[Edge Case A: Empty Name]" << C_RESET << std::endl;
+	randomChump("");
+
+	std::cout << C_YELLOW << "\n[Edge Case B: Special Characters]" << C_RESET << std::endl;
+	Zombie* special = newZombie("Z0mb!e_#42");
+	special->announce();
+	delete special;
+
+	std::cout << C_YELLOW << "\n[Edge Case C: Very Long Name]" << C_RESET << std::endl;
+	randomChump("HubertBlaineWolfeschlegelsteinhausenbergerdorffSr");
+
+	std::cout << C_BOLD << C_MAGENTA << "\n=== END OF TESTS ===" << C_RESET << "\n" << std::endl;
+
+	return 0;
 }

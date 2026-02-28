@@ -13,38 +13,36 @@
 #include "Fixed.hpp"
 
 // Colors for professional presentation
-#define RESET   "\033[0m"
-#define RED     "\033[31m"
-#define GREEN   "\033[32m"
-#define YELLOW  "\033[33m"
-#define CYAN    "\033[36m"
-#define DIM     "\033[2m"
+#define RESET "\033[0m"
+#define RED "\033[31m"
+#define GREEN "\033[32m"
+#define YELLOW "\033[33m"
+#define CYAN "\033[36m"
+#define DIM "\033[2m"
 
 Fixed::Fixed() : _fixedPointValue(0) {
-    std::cout << GREEN << "Default constructor called" << RESET << std::endl;
+  std::cout << GREEN << "Default constructor called" << RESET << std::endl;
 }
 
 Fixed::Fixed(const Fixed &other) {
-    std::cout << YELLOW << "Copy constructor called" << RESET << std::endl;
-    *this = other;
+  std::cout << YELLOW << "Copy constructor called" << RESET << std::endl;
+  *this = other;
 }
 
 Fixed &Fixed::operator=(const Fixed &other) {
-    std::cout << CYAN << "Copy assignment operator called" << RESET << std::endl;
-    if (this != &other)
-        this->_fixedPointValue = other.getRawBits();
-    return *this;
+  std::cout << CYAN << "Copy assignment operator called" << RESET << std::endl;
+  if (this != &other) this->_fixedPointValue = other.getRawBits();
+  return *this;
 }
 
 Fixed::~Fixed() {
-    std::cout << RED << "Destructor called" << RESET << std::endl;
+  std::cout << RED << "Destructor called" << RESET << std::endl;
 }
 
 int Fixed::getRawBits(void) const {
-    std::cout << DIM << "  getRawBits member function called" << RESET << std::endl;
-    return this->_fixedPointValue;
+  std::cout << DIM << "  getRawBits member function called" << RESET
+            << std::endl;
+  return this->_fixedPointValue;
 }
 
-void Fixed::setRawBits(int const raw) {
-    this->_fixedPointValue = raw;
-}
+void Fixed::setRawBits(int const raw) { this->_fixedPointValue = raw; }

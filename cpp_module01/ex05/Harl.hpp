@@ -1,20 +1,32 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Harl.hpp                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/02/28 17:50:34 by dlesieur          #+#    #+#             */
+/*   Updated: 2026/02/28 17:50:35 by dlesieur         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef HARL_HPP
 # define HARL_HPP
 
 # include <string>
+# include <iostream>
 
-class   Harl
-{
-	public:
-		typedef void (Harl::*FuncPtr)(void);
-		enum { LVL_DEBUG, LVL_INFO, LVL_WARNING, LVL_ERROR, LVL_COUNT };
-		Harl();
-		~Harl();
-		void	complain( std::string level );
-	private:
-		void	debug( void );
-		void	info( void );
-		void	warning( void );
-		void	error( void );
+class Harl {
+private:
+    void debug(void);
+    void info(void);
+    void warning(void);
+    void error(void);
+
+public:
+    Harl();
+    ~Harl();
+    void complain(std::string level);
 };
+
 #endif

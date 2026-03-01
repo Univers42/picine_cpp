@@ -1,16 +1,16 @@
 # Project Configuration
-CXX = @@CXX@@
-CXXFLAGS = @@CXXFLAGS@@
-INC = @@INC@@
-LDFLAGS = @@LDFLAGS@@
-LIB_DIR = @@LIB_DIR@@
-LIBS = @@LIBS@@
+CXX = c++
+CXXFLAGS = -Wall -Wextra -Werror
+INC = -I.
+LDFLAGS = 
+LIB_DIR = 
+LIBS = 
 
 # Add conditional -L flag only when LIB_DIR is set
 LIBDIR_FLAG := $(if $(strip $(LIB_DIR)),-L$(LIB_DIR),)
 
 # Source files (auto-detected or provided)
-SRC_LIST = @@SRC@@
+SRC_LIST = PmergeMe.cpp main.cpp
 
 # Build directories
 BUILD_DIR = build
@@ -18,7 +18,7 @@ OBJ_DIR = $(BUILD_DIR)/obj
 BIN_DIR = $(BUILD_DIR)/bin
 
 # CRITICAL FIX: Isolate the Python target injection so rules compile to the right folder
-EXEC_BIN = $(BIN_DIR)/@@TARGET@@
+EXEC_BIN = $(BIN_DIR)/ex02
 
 # Object files from SRC_LIST
 OBJ := $(addprefix $(OBJ_DIR)/,$(addsuffix .o,$(basename $(SRC_LIST))))
@@ -26,7 +26,7 @@ OBJ := $(addprefix $(OBJ_DIR)/,$(addsuffix .o,$(basename $(SRC_LIST))))
 # Exclude main.o from the object list so tests don't get double main() functions
 OBJ_NO_MAIN := $(filter-out %/main.o %/Main.o,$(OBJ))
 
-GTEST_DIR = @@GTEST_DIR@@
+GTEST_DIR = ../../vendor/gtest
 GTEST_LIB_PATH = $(GTEST_DIR)/lib
 # Only add -lgtest flags if the library files actually exist
 HAS_GTEST := $(shell [ -f "$(GTEST_LIB_PATH)/libgtest.a" ] && echo 1 || echo 0)
@@ -161,7 +161,7 @@ $(OBJ_DIR) $(BIN_DIR) $(OBJ_DIR)/tests:
 # ── Code Quality / Linting ────────────────────────────────────────────────────
 
 # Auto-injected by gen_make.py based on relative directory structures
-LINTER_SCRIPT = @@LINTER_SCRIPT@@
+LINTER_SCRIPT = ../../autotools/norminette.sh
 
 norminette:
 	@printf "\n  $(BOLD)$(CYAN) Running C++ Code Quality Checks$(RESET)\n"

@@ -19,8 +19,8 @@ CYAN = '\033[96m'
 YELLOW = '\033[93m'
 RED = '\033[91m'
 
-def find_source_files(directory: Path, recursive: bool = False) -> List[str]:
-    """Find all C/C++ source files in directory, strictly excluding the tests directory"""
+def find_source_files(directory: Path, recursive: bool = True) -> List[str]:
+    """Find all C/C++ source files in directory, excluding tests/ and build/ directories"""
     extensions = ('.cpp', '.cc', '.cxx', '.c')
     sources = []
 
@@ -31,8 +31,9 @@ def find_source_files(directory: Path, recursive: bool = False) -> List[str]:
         for ext in extensions:
             sources.extend([str(p.relative_to(directory)) for p in directory.glob(f'*{ext}')])
 
-    # OS-Safe filter: Exclude any file where the first folder is 'tests'
-    sources = [s for s in sources if not Path(s).parts[0] == 'tests']
+    # Exclude any file that lives under a 'tests' or 'build' directory at any depth
+    excluded_dirs = {'tests', 'build'}
+    sources = [s for s in sources if not any(part in excluded_dirs for part in Path(s).parts)]
 
     return sorted(sources)
 
@@ -91,13 +92,10 @@ def generate_makefile(
         print(f"  {DIM}linter{RESET}       {CYAN}{rel_linter}{RESET}")
     # ──────────────────────────────────────────────────────────────────────────
 
-    # Replace placeholders in template
+    # Replace @@KEY@@ placeholders in template (not $(KEY) which are Make variables)
     result = template
     for key, value in default_config.items():
-        # support multiple placeholder styles
-        result = result.replace(f'$({key})', str(value))
-        result = result.replace('${' + key + '}', str(value))
-        result = result.replace(f'${key}', str(value))
+        result = result.replace(f'@@{key}@@', str(value))
 
     # Write output
     output_path = target_dir / output_name
@@ -122,7 +120,10 @@ def main():
     parser.add_argument('--gtest-dir', help='Google Test directory')
     parser.add_argument('--checker', help='Checker script path')
     parser.add_argument('--libcpp-dir', help='libcpp directory')
-    parser.add_argument('--recursive', action='store_true', help='Recursively find source files')
+    parser.add_argument('--recursive', action='store_true', default=True,
+                        help='Recursively find source files (default: True)')
+    parser.add_argument('--no-recursive', action='store_false', dest='recursive',
+                        help='Only find source files in top-level directory')
 
     args = parser.parse_args()
 

@@ -18,7 +18,7 @@ OBJ_DIR = $(BUILD_DIR)/obj
 BIN_DIR = $(BUILD_DIR)/bin
 
 # CRITICAL FIX: Isolate the Python target injection so rules compile to the right folder
-EXEC_BIN = $(BIN_DIR)/ex00
+EXEC_BIN = $(BIN_DIR)/ex01
 
 # Object files from SRC_LIST
 OBJ := $(addprefix $(OBJ_DIR)/,$(addsuffix .o,$(basename $(SRC_LIST))))

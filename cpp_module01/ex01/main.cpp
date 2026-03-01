@@ -6,48 +6,57 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 16:00:20 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/02/28 16:32:25 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:42:16 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <iostream>
 #include "Zombie.hpp"
 
 int main(void) {
-	int N = 5;
+  int N = 5;
 
-	std::cout << C_BOLD << C_MAGENTA << "\n=== 1. CREATING THE HORDE ===" << C_RESET << std::endl;
-	std::cout << C_YELLOW << "-> Calling zombieHorde(" << N << ", \"Minion\")" << C_RESET << std::endl;
+  std::cout << C_BOLD << C_MAGENTA
+            << "\n=== 1. CREATING THE HORDE ===" << C_RESET << std::endl;
+  std::cout << C_YELLOW << "-> Calling zombieHorde(" << N << ", \"Minion\")"
+            << C_RESET << std::endl;
 
-	// Creates the horde
-	Zombie* horde = zombieHorde(N, "Minion");
+  // Creates the horde
+  Zombie* horde = zombieHorde(N, "Minion");
 
-	if (!horde) {
-		std::cout << C_RED << "Failed to create horde!" << C_RESET << std::endl;
-		return 1;
-	}
+  if (!horde) {
+    std::cout << C_RED << "Failed to create horde!" << C_RESET << std::endl;
+    return 1;
+  }
 
-	std::cout << C_BOLD << C_MAGENTA << "\n=== 2. THE HORDE ANNOUNCES ITSELF ===" << C_RESET << std::endl;
+  std::cout << C_BOLD << C_MAGENTA
+            << "\n=== 2. THE HORDE ANNOUNCES ITSELF ===" << C_RESET
+            << std::endl;
 
-	// Calling announce() for each of the zombies
-	for (int i = 0; i < N; i++) {
-		std::cout << C_DIM << "Zombie " << i << ": " << C_RESET;
-		horde[i].announce();
-	}
+  // Calling announce() for each of the zombies
+  for (int i = 0; i < N; i++) {
+    std::cout << C_DIM << "Zombie " << i << ": " << C_RESET;
+    horde[i].announce();
+  }
 
-	std::cout << C_BOLD << C_MAGENTA << "\n=== 3. DESTROYING THE HORDE ===" << C_RESET << std::endl;
-	std::cout << C_YELLOW << "-> Calling delete[] horde" << C_RESET << std::endl;
+  std::cout << C_BOLD << C_MAGENTA
+            << "\n=== 3. DESTROYING THE HORDE ===" << C_RESET << std::endl;
+  std::cout << C_YELLOW << "-> Calling delete[] horde" << C_RESET << std::endl;
 
-	// MUST use delete[] to deallocate an array and prevent memory leaks
-	delete[] horde;
+  // MUST use delete[] to deallocate an array and prevent memory leaks
+  delete[] horde;
 
-	// Edge Case Test: N = 0
-	std::cout << C_BOLD << C_MAGENTA << "\n=== 4. EDGE CASE: N = 0 ===" << C_RESET << std::endl;
-	Zombie* zeroHorde = zombieHorde(0, "Nobody");
-	if (zeroHorde == NULL) {
-		std::cout << C_GREEN << "Successfully handled N = 0 by returning NULL." << C_RESET << std::endl;
-	}
+  // Edge Case Test: N = 0
+  std::cout << C_BOLD << C_MAGENTA << "\n=== 4. EDGE CASE: N = 0 ===" << C_RESET
+            << std::endl;
+  Zombie* zeroHorde = zombieHorde(0, "Nobody");
+  if (zeroHorde == NULL) {
+    std::cout << C_GREEN << "Successfully handled N = 0 by returning NULL."
+              << C_RESET << std::endl;
+  }
 
-	std::cout << C_BOLD << C_MAGENTA << "\n=== END OF TESTS ===\n" << C_RESET << std::endl;
+  std::cout << C_BOLD << C_MAGENTA << "\n=== END OF TESTS ===\n"
+            << C_RESET << std::endl;
 
-	return 0;
+  return 0;
 }

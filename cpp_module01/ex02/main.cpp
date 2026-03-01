@@ -10,8 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <string>
 #include <iostream>
+#include <string>
 
 /**
  * PURPOSE: Demontrate the use of pointers, variables, references in C++
@@ -36,8 +36,7 @@
  *   - ideal for function parameters/returns when we want to avoid copies and
  *     don't need nullability or reseating
  */
-int main(void)
-{
+int main(void) {
   std::string greet = "Hi this is brain";
   std::string* stringPTR = &greet;
   std::string& stringREF = greet;

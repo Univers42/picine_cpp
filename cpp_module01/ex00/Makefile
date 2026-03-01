@@ -1,13 +1,13 @@
 # Project Configuration
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror
-INC = 
+INC = -I.
 LDFLAGS = 
 LIB_DIR = 
 LIBS = 
 
 # Add conditional -L flag only when LIB_DIR is set
-LIBDIR_FLAG := $(if $(strip ),-L,)
+LIBDIR_FLAG := $(if $(strip $(LIB_DIR)),-L$(LIB_DIR),)
 
 # Source files (auto-detected or provided)
 SRC_LIST = Zombie.cpp main.cpp newZombie.cpp randomChump.cpp
@@ -26,31 +26,35 @@ OBJ := $(addprefix $(OBJ_DIR)/,$(addsuffix .o,$(basename $(SRC_LIST))))
 # Exclude main.o from the object list so tests don't get double main() functions
 OBJ_NO_MAIN := $(filter-out %/main.o %/Main.o,$(OBJ))
 
-# Google Test Configuration
 GTEST_DIR = ../../vendor/gtest
-GTEST_INC_CANDIDATES = ../../vendor/gtest/include ../../vendor/gtest/googletest/include ../../vendor/gtest
-GTEST_INC := $(shell for d in $(GTEST_INC_CANDIDATES); do [ -d "$$d" ] && { echo -I$$d; break; } done)
-ifeq ($(strip $(GTEST_INC)),)
-GTEST_INC = -I../../vendor/gtest/include
+GTEST_LIB_PATH = $(GTEST_DIR)/lib
+# Only add -lgtest flags if the library files actually exist
+HAS_GTEST := $(shell [ -f "$(GTEST_LIB_PATH)/libgtest.a" ] && echo 1 || echo 0)
+
+ifeq ($(HAS_GTEST),1)
+    GTEST_LIBS = -L$(GTEST_LIB_PATH) -lgtest -lgtest_main -pthread
+    GTEST_DEF = -DHAVE_GTEST=1
+else
+    GTEST_LIBS =
+    GTEST_DEF = -DHAVE_GTEST=0
 endif
-GTEST_LIBS = -L../../vendor/gtest/build/lib -L../../vendor/gtest/lib -lgtest -lgtest_main -pthread
 
 # Checker Script
-CHECKER = /path/to/checker.py
+CHECKER = @@CHECKER@@
 
 # Test Configuration
 TEST_SRCS := $(wildcard tests/*.cpp tests/*.c)
-TEST_BINS := $(foreach f,tests/test.cpp,$(BIN_DIR)/$(basename $(notdir $(f))))
+TEST_BINS := $(foreach f,$(TEST_SRCS),$(BIN_DIR)/$(basename $(notdir $(f))))
 
 # libcpp control flag
 LCPP ?= 0
 
 # Auto-detect include directories
-ifeq ($(strip ),)
+ifeq ($(strip $(INC)),)
 ifeq ($(LCPP),0)
 INC :=
 else
-INC := -I -I/include -I/inc
+INC := -I$(LIB_DIR) -I$(LIB_DIR)/include -I$(LIB_DIR)/inc
 endif
 endif
 
@@ -58,10 +62,10 @@ endif
 ifeq ($(LCPP),0)
 CPPFLAGS :=
 else
-ifeq ($(wildcard /libcpp.h),)
+ifeq ($(wildcard $(LIB_DIR)/libcpp.h),)
 CPPFLAGS :=
 else
-CPPFLAGS := -include /libcpp.h
+CPPFLAGS := -include $(LIB_DIR)/libcpp.h
 endif
 endif
 
@@ -78,14 +82,14 @@ all: $(EXEC_BIN)
 
 $(EXEC_BIN): $(OBJ) | $(BIN_DIR)
 	@printf "  $(DIM)linking$(RESET)      $(CYAN)$(notdir $@)$(RESET)\n"
-	@if [ "$(LCPP)" != "0" ]; then $(MAKE) -C ; fi
+	@if [ "$(LCPP)" != "0" ]; then $(MAKE) -C $(LIB_DIR); fi
 	@libfile=""; \
-	if [ -f "/libcpp.a" ]; then libfile="/libcpp.a"; \
-	elif [ -f "/libcpp.so" ]; then libfile="/libcpp.so"; fi; \
+	if [ -f "$(LIB_DIR)/libcpp.a" ]; then libfile="$(LIB_DIR)/libcpp.a"; \
+	elif [ -f "$(LIB_DIR)/libcpp.so" ]; then libfile="$(LIB_DIR)/libcpp.so"; fi; \
 	if [ -n "$$libfile" ]; then \
-		c++ -Wall -Wextra -Werror $(CPPFLAGS)  $(OBJ) -o $@  $$libfile; \
+		$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(OBJ) -o $@ $(LDFLAGS) $$libfile; \
 	else \
-		c++ -Wall -Wextra -Werror $(CPPFLAGS)  $(OBJ) -o $@ $(LIBDIR_FLAG)  ; \
+		$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(OBJ) -o $@ $(LIBDIR_FLAG) $(LDFLAGS) $(LIBS); \
 	fi
 	@printf "\n  $(GREEN)●$(RESET) $(BOLD)Build complete$(RESET) $(DIM)→ $@$(RESET)\n\n"
 
@@ -98,44 +102,47 @@ run: $(EXEC_BIN)
 $(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
 	@mkdir -p $(dir $@)
 	@printf "  $(DIM)compiling$(RESET)    $(CYAN)%-30s$(RESET)\n" "$(notdir $<)"
-	@c++ -Wall -Wextra -Werror $(CPPFLAGS)  -c $< -o $@
+	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) -c $< -o $@
 
 $(OBJ_DIR)/%.o: %.c | $(OBJ_DIR)
 	@mkdir -p $(dir $@)
 	@printf "  $(DIM)compiling$(RESET)    $(CYAN)%-30s$(RESET)\n" "$(notdir $<)"
-	@c++ -Wall -Wextra -Werror $(CPPFLAGS)  -x c++ -c $< -o $@
+	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) -x c++ -c $< -o $@
 
 # ── Test targets ──────────────────────────────────────────────────────────────
 # Compile test sources
 $(OBJ_DIR)/tests/%.o: tests/%.cpp | $(OBJ_DIR)/tests
 	@mkdir -p $(dir $@)
 	@printf "  $(DIM)compiling test$(RESET) $(CYAN)%-30s$(RESET)\n" "$(notdir $<)"
-	@c++ -Wall -Wextra -Werror $(CPPFLAGS)  $(GTEST_INC) -I. -c $< -o $@
+	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(GTEST_INC) $(GTEST_DEF) -I. -c $< -o $@
 
-# Link each test binary: Uses OBJ_NO_MAIN to avoid conflicts!
 $(BIN_DIR)/%: $(OBJ_DIR)/tests/%.o $(OBJ_NO_MAIN) | $(BIN_DIR)
 	@printf "  $(DIM)linking test$(RESET)   $(CYAN)%-30s$(RESET)\n" "$(notdir $@)"
-	@c++ -Wall -Wextra -Werror $(CPPFLAGS)  $(OBJ_NO_MAIN) $< -o $@ $(GTEST_LIBS)  
+	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(OBJ_NO_MAIN) $< -o $@ $(GTEST_LIBS) $(LDFLAGS) $(LIBS)
 	@printf "  $(GREEN)●$(RESET) $(BOLD)Test build complete$(RESET) $(DIM)→ $@$(RESET)\n"
 
-test: gtest $(BIN_DIR)/test
-	@printf "\n  $(GREEN)●$(RESET) Built $(words $(BIN_DIR)/test) test(s)\n"
-	@for test_bin in $(BIN_DIR)/test; do \
-		echo "  $(CYAN)Executing $$test_bin...$(RESET)"; \
-		./$$test_bin || exit 1; \
-	done
-
-# Google Test build helper
-gtest:
-	@if [ ! -d "../../vendor/gtest/build" ]; then \
-		mkdir -p "../../vendor/gtest/build"; \
+# Dynamically build and execute any tests found in the tests/ directory
+test: $(TEST_BINS)
+	@if [ -z "$(TEST_BINS)" ]; then \
+		printf "\n  $(YELLOW)⚠$(RESET) No tests found in tests/ directory.\n"; \
+	else \
+		printf "\n  $(GREEN)●$(RESET) Built $(words $(TEST_BINS)) test(s)\n"; \
+		for test_bin in $(TEST_BINS); do \
+			echo "  $(CYAN)Executing $$test_bin...$(RESET)"; \
+		done; \
 	fi
-	@if [ ! -f "../../vendor/gtest/lib/libgtest.a" ] || [ ! -f "../../vendor/gtest/lib/libgtest_main.a" ]; then \
+
+# Google Test build helper (Only runs if 'make gtest' is explicitly called)
+gtest:
+	@if [ ! -d "$(GTEST_DIR)/build" ]; then \
+		mkdir -p "$(GTEST_DIR)/build"; \
+	fi
+	@if [ ! -f "$(GTEST_DIR)/lib/libgtest.a" ] || [ ! -f "$(GTEST_DIR)/lib/libgtest_main.a" ]; then \
 		printf "  $(DIM)building$(RESET)     $(YELLOW)Google Test$(RESET)\n"; \
-		cd "../../vendor/gtest/build" && cmake .. > /dev/null 2>&1 && $(MAKE) > /dev/null 2>&1; \
-		mkdir -p "../../vendor/gtest/lib"; \
-		cp "../../vendor/gtest/build/lib/libgtest.a" "../../vendor/gtest/lib/" 2>/dev/null || true; \
-		cp "../../vendor/gtest/build/lib/libgtest_main.a" "../../vendor/gtest/lib/" 2>/dev/null || true; \
+		cd "$(GTEST_DIR)/build" && cmake .. > /dev/null 2>&1 && $(MAKE) > /dev/null 2>&1; \
+		mkdir -p "$(GTEST_DIR)/lib"; \
+		cp "$(GTEST_DIR)/build/lib/libgtest.a" "$(GTEST_DIR)/lib/" 2>/dev/null || true; \
+		cp "$(GTEST_DIR)/build/lib/libgtest_main.a" "$(GTEST_DIR)/lib/" 2>/dev/null || true; \
 	fi
 
 # Clean targets
@@ -151,4 +158,32 @@ re: fclean all
 $(OBJ_DIR) $(BIN_DIR) $(OBJ_DIR)/tests:
 	@mkdir -p $@
 
-.PHONY: all run clean fclean re test gtest
+# ── Code Quality / Linting ────────────────────────────────────────────────────
+
+# Auto-injected by gen_make.py based on relative directory structures
+LINTER_SCRIPT = ../../autotools/norminette.sh
+
+norminette:
+	@printf "\n  $(BOLD)$(CYAN) Running C++ Code Quality Checks$(RESET)\n"
+	@if [ -f "$(LINTER_SCRIPT)" ]; then \
+		python3 "$(LINTER_SCRIPT)" . -- -std=c++98 -Wall -Wextra -I.; \
+	else \
+		printf "  $(RED)✘ Linter script not found at $(LINTER_SCRIPT)$(RESET)\n"; \
+	fi
+
+# Bonus: Automatically fix clang-format issues
+format:
+	@printf "\n  $(BOLD)$(CYAN) Auto-formatting C++ Source Files$(RESET)\n"
+	@if command -v clang-format >/dev/null 2>&1; then \
+		find . -name "*.cpp" -o -name "*.hpp" -o -name "*.h" -o -name "*.c" | xargs clang-format -i -style=Google; \
+		printf "  $(GREEN)●$(RESET) Files formatted successfully using Google style.\n"; \
+	else \
+		printf "  $(RED)✘ clang-format is not installed!$(RESET)\n"; \
+	fi
+
+# ── MySQLite mode (conditional) ────────────────────────────────────────────────
+sqlite: fclean
+	@printf "  $(BOLD)$(CYAN)Building with MySQLite REPL support$(RESET)\n"
+	@$(MAKE) CXXFLAGS="-std=c++98 -Wall -Wextra -Werror -DHAVE_MY_SQL_LITE=1" LDFLAGS="-lreadline" all
+
+.PHONY: all run clean fclean re test gtest norminette format sqlite

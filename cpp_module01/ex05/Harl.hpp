@@ -6,27 +6,27 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 17:50:34 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/02/28 17:50:35 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:51:12 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef HARL_HPP
-# define HARL_HPP
+#ifndef CPP_MODULE01_EX05_HARL_HPP_
+#define CPP_MODULE01_EX05_HARL_HPP_
 
-# include <string>
-# include <iostream>
+#include <iostream>
+#include <string>
 
 class Harl {
-private:
-    void debug(void);
-    void info(void);
-    void warning(void);
-    void error(void);
+ private:
+  void debug(void);
+  void info(void);
+  void warning(void);
+  void error(void);
 
-public:
-    Harl();
-    ~Harl();
-    void complain(std::string level);
+ public:
+  Harl();
+  ~Harl();
+  void complain(std::string level);
 };
 
-#endif
+#endif  // CPP_MODULE01_EX05_HARL_HPP_

@@ -6,27 +6,28 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 16:45:20 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/02/28 16:58:30 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:45:47 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef HUMANB_HPP
-# define HUMANB_HPP
+#ifndef CPP_MODULE01_EX03_HUMANB_HPP_
+#define CPP_MODULE01_EX03_HUMANB_HPP_
 
-# include <string>
-# include "Weapon.hpp"
+#include <string>
+
+#include "Weapon.hpp"
 
 class HumanB {
-  private:
-    std::string name;
-    Weapon* weapon; // Pointer because HumanB can be unarmed (NULL)
+ private:
+  std::string name;
+  Weapon* weapon;  // Pointer because HumanB can be unarmed (NULL)
 
-  public:
-    HumanB(const std::string& name);
-    ~HumanB();
+ public:
+  explicit HumanB(const std::string& name);
+  ~HumanB();
 
-    void setWeapon(Weapon& weapon);
-    void attack() const;
+  void setWeapon(Weapon& weapon);
+  void attack() const;
 };
 
-#endif
+#endif  // CPP_MODULE01_EX03_HUMANB_HPP_

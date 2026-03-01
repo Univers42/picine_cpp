@@ -6,25 +6,26 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 16:41:20 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/02/28 16:58:15 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:45:23 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef HUMANA_HPP
-# define HUMANA_HPP
+#ifndef CPP_MODULE01_EX03_HUMANA_HPP_
+#define CPP_MODULE01_EX03_HUMANA_HPP_
 
-# include <string>
-# include "Weapon.hpp"
+#include <string>
+
+#include "Weapon.hpp"
 
 class HumanA {
-  private:
-    std::string name;
-    Weapon& weapon; // Reference because HumanA is ALWAYS armed
+ private:
+  std::string name;
+  Weapon& weapon;  // Reference because HumanA is ALWAYS armed
 
-  public:
-    HumanA(const std::string& name, Weapon& weapon);
-    ~HumanA();
-    void attack() const;
+ public:
+  HumanA(const std::string& name, Weapon& weapon);
+  ~HumanA();
+  void attack() const;
 };
 
-#endif
+#endif  // CPP_MODULE01_EX03_HUMANA_HPP_

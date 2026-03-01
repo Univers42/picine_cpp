@@ -1,35 +1,36 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   replacer.hpp                                       :+:      :+:    :+:   */
+/*   Replacer.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 17:30:18 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/02/28 17:30:23 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:50:39 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef REPLACER_HPP
-# define REPLACER_HPP
+#ifndef CPP_MODULE01_EX04_REPLACER_HPP_
+#define CPP_MODULE01_EX04_REPLACER_HPP_
 
-# include <string>
+#include <string>
 
 class Replacer {
-  private:
-    std::string inFile;
-    std::string outFile;
-    std::string s1;
-    std::string s2;
+ private:
+  std::string inFile;
+  std::string outFile;
+  std::string s1;
+  std::string s2;
 
-    // Helper for the Knuth-Morris-Pratt Algorithm
-    void computeLPSArray(int* lps) const;
+  // Helper for the Knuth-Morris-Pratt Algorithm
+  void computeLPSArray(int* lps) const;
 
-  public:
-    Replacer(const std::string& filename, const std::string& s1, const std::string& s2);
-    ~Replacer();
+ public:
+  Replacer(const std::string& filename, const std::string& s1,
+           const std::string& s2);
+  ~Replacer();
 
-    bool process();
+  bool process();
 };
 
-#endif
+#endif  // CPP_MODULE01_EX04_REPLACER_HPP_

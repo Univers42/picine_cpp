@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 15:15:45 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/02/28 15:43:41 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 18:18:32 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,6 @@
 
 #define PAT_SPACE " \t\n\r\v\f"
 
-// ── UI Styling Macros ────────────────────────────────────────────────────────
 #define C_RESET "\033[0m"
 #define C_BOLD "\033[1m"
 #define C_DIM "\033[2m"
@@ -44,8 +43,6 @@ std::string trim(const std::string& s) {
 int main() {
   std::string input;
   PhoneBook pb;
-
-  // Professional Welcome Banner
   std::cout << C_BOLD << C_CYAN << "╔══════════════════════════════════════╗\n";
   std::cout << "║         MY AWESOME PHONEBOOK         ║\n";
   std::cout << "╚══════════════════════════════════════╝\n" << C_RESET;
@@ -55,19 +52,14 @@ int main() {
             << C_RESET;
 
   while (true) {
-    // Professional styled prompt
     std::cout << "\n"
               << C_BOLD << C_CYAN << "PhoneBook" << C_RESET << " > "
               << std::flush;
-
-    // Catch Ctrl+D securely
     if (!std::getline(std::cin, input)) {
       std::cout << std::endl;
       break;
     }
-
     std::string cmd = strtolower(trim(input));
-
     if (cmd == "add")
       pb.add();
     else if (cmd == "search")

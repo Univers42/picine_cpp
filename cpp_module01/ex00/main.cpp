@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 16:00:20 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 17:40:11 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 18:11:53 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,8 +39,7 @@ int main(void) {
 
   std::cout << C_YELLOW << "-> Deleting HeapWalker manually:" << C_RESET
             << std::endl;
-  delete heapWalker;  // Zombies must be destroyed when you no longer need
-                      // them[cite: 136].
+  delete heapWalker;
   std::cout << C_DIM << "-> HeapWalker is now completely destroyed." << C_RESET
             << std::endl;
 

@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 23:48:29 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 17:24:01 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 18:13:42 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 #include <iostream>
 
 Dog::Dog() : Animal() {
-  this->type = "Dog";  // Set type to Dog [cite: 162]
+  this->type = "Dog";
   std::cout << GREEN << "Dog default constructor called" << RESET << std::endl;
 }
 

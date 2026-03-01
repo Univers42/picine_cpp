@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 16:05:43 by marvin            #+#    #+#             */
-/*   Updated: 2026/02/28 15:09:34 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 18:16:02 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,6 @@
 
 #define LOUD_NOISE "* LOUD AND UNBEARABLE FEEDBACK NOISE *\n"
 
-// Color macros for terminal output
 #define YELLOW "\033[33m"
 #define CYAN "\033[36m"
 #define RESET "\033[0m"
@@ -105,9 +104,7 @@ int optimized_solution(int ac, char** av) {
   }
   return (0);
 }
-// ─────────────────────────────────────────────────────────────────────────────
-//  APPROACH 2: The Simple std::string + std::transform
-// ─────────────────────────────────────────────────────────────────────────────
+
 int other_solution(int ac, char** av) {
   if (ac == 1) return (std::cout << YELLOW LOUD_NOISE RESET, 0);
   std::cout << CYAN;

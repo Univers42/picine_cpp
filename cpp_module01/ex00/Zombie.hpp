@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 15:59:41 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 17:40:23 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 18:12:21 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,16 +28,15 @@
 
 class Zombie {
  private:
-  std::string name;  // It has a private string attribute name[cite: 125].
+  std::string name;
 
  public:
   explicit Zombie(std::string name);
   ~Zombie();
   void announce(
-      void);  // Add a member function void announce(void);[cite: 126].
+      void);
 };
 
-// Standalone functions[cite: 131, 133].
 Zombie* newZombie(std::string name);
 void randomChump(std::string name);
 

@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/01 12:43:11 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 12:45:10 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 18:15:06 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,8 +58,8 @@ int main() {
             << CYAN << "--- TEST 2: Homogeneous Elements (All Zeros) ---"
             << RESET << std::endl;
   try {
-    Span zeroSpan(10000);              // 10,000 numbers requirement [cite: 422]
-    std::vector<int> zeros(10000, 0);  // Vector filled with 10,000 zeros
+    Span zeroSpan(10000);
+    std::vector<int> zeros(10000, 0);
 
     zeroSpan.addNumber(zeros.begin(), zeros.end());
     std::cout << "Added 10,000 zeros.\n";
@@ -76,8 +76,8 @@ int main() {
             << RESET << std::endl;
   try {
     Span boundarySpan(10);
-    std::vector<int> chunk1(5, 42);  // 5 elements
-    std::vector<int> chunk2(6, 84);  // 6 elements
+    std::vector<int> chunk1(5, 42);
+    std::vector<int> chunk2(6, 84);
 
     std::cout << YELLOW << "Adding chunk of 5 to a Span of 10..." << RESET
               << std::endl;
@@ -104,8 +104,6 @@ int main() {
 
     unsigned int seed = time(NULL);
     for (int i = 0; i < 100000; i++) {
-      // Generate numbers across the entire positive and negative integer
-      // spectrum
       int random_val = rand_r(&seed);
       if (rand_r(&seed) % 2 == 0) random_val *= -1;
       fuzzedData.push_back(random_val);

@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 14:20:04 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/02/28 15:02:58 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 18:16:32 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,17 +42,14 @@ double benchmark_solution(const std::string& name, SolutionFn func, int ac,
   return elapsed_ms;
 }
 
-// ── Chaotic String Generator ─────────────────────────────────────────────────
 char* generate_random_string(int length, int space_percentage) {
   char* str = new char[length + 1];
   for (int i = 0; i < length; ++i) {
     int rand_val = std::rand() % 100;
     if (rand_val < space_percentage) {
-      // Randomly pick between space, tab, or carriage return
       int ws_type = std::rand() % 3;
       str[i] = (ws_type == 0) ? ' ' : ((ws_type == 1) ? '\t' : '\r');
     } else {
-      // Random lowercase letter
       str[i] = 'a' + (std::rand() % 26);
     }
   }
@@ -91,29 +88,15 @@ void run_chaos_scenario(const std::string& name, int num_args,
 }
 
 int main() {
-  // CRITICAL FOR PERFORMANCE: Untie C++ streams from C streams.
-  // This allows std::cout << char to run without OS bottleneck overhead.
   std::ios_base::sync_with_stdio(false);
   std::cin.tie(NULL);
-
-  // Seed the random number generator so tests are repeatable
   std::srand(42);
 
   std::cout << "═══════════════════════════════════════════\n";
   std::cout << "  Megaphone 'Millions of Bytes' Benchmark\n";
   std::cout << "═══════════════════════════════════════════\n";
-
-  // Scenario 1: The Monolith
-  // 1 massive argument, 5 Megabytes long. Very few spaces.
   run_chaos_scenario("The 5MB Monolith", 1, 5000000, 2);
-
-  // Scenario 2: The Fragmentation Nightmare
-  // 50,000 tiny arguments, simulating heavy looping and boundaries.
   run_chaos_scenario("The Fragmentation Nightmare", 50000, 100, 25);
-
-  // Scenario 3: The Space Desert
-  // 2 Megabytes of data, but it is 90% spaces, tabs, and \r.
   run_chaos_scenario("The Space Desert", 2000, 1000, 90);
-
   return 0;
 }

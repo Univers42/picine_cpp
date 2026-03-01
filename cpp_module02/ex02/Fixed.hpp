@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 18:42:31 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 17:53:57 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 18:13:04 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ class Fixed {
   float toFloat(void) const;
   int toInt(void) const;
 
-  // Comparison operators [cite: 259]
+  // Comparison operators
   bool operator>(const Fixed& other) const;
   bool operator<(const Fixed& other) const;
   bool operator>=(const Fixed& other) const;
@@ -44,7 +44,7 @@ class Fixed {
   bool operator==(const Fixed& other) const;
   bool operator!=(const Fixed& other) const;
 
-  // Arithmetic operators [cite: 260]
+  // Arithmetic operators
   Fixed operator+(const Fixed& other) const;
   Fixed operator-(const Fixed& other) const;
   Fixed operator*(const Fixed& other) const;
@@ -56,7 +56,7 @@ class Fixed {
   Fixed& operator--(void);  // Pre-decrement
   Fixed operator--(int);    // Post-decrement
 
-  // Static min/max functions [cite: 262, 263, 264, 265, 266]
+  // Static min/max functions
   static Fixed& min(Fixed& a, Fixed& b);
   static const Fixed& min(const Fixed& a, const Fixed& b);
   static Fixed& max(Fixed& a, Fixed& b);

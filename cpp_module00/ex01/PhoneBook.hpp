@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 15:15:39 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 18:03:21 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 18:19:36 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ class PhoneBook {
  public:
   PhoneBook();
   void add();
-  void search() const;  // Made const
+  void search() const;
   void seed();
 
   int getCount() const;

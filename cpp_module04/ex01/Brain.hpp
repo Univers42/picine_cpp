@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 23:54:50 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/02/28 23:54:58 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 18:14:04 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,9 +21,7 @@
 
 class Brain {
  public:
-  std::string ideas[100];  // Array of 100 ideas [cite: 192]
-
-  // Orthodox Canonical Form
+  std::string ideas[100];
   Brain();
   Brain(const Brain& src);
   Brain& operator=(const Brain& rhs);

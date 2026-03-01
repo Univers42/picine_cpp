@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 01:07:41 by marvin            #+#    #+#             */
-/*   Updated: 2026/03/01 18:05:15 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 18:19:32 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,6 @@
 
 #include <string>
 #include <utility>
-// ── UI Styling Macros ────────────────────────────────────────────────────────
 #define C_RESET "\033[0m"
 #define C_BOLD "\033[1m"
 #define C_DIM "\033[2m"
@@ -28,22 +27,17 @@
 #define C_GREEN "\033[32m"
 #define C_RED "\033[31m"
 
-// Unicode Box Drawing Characters
 #define BOX_TOP "┌──────────┬──────────┬──────────┬──────────┐"
 #define BOX_MID "├──────────┼──────────┼──────────┼──────────┤"
 #define BOX_BOT "└──────────┴──────────┴──────────┴──────────┘"
 #define V_BAR "│"
-// ─────────────────────────────────────────────────────────────────────────────
 
 PhoneBook::PhoneBook() : cap(MAX_CONTACT), size(0), count(0) {}
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
 
 static std::string formatField(const std::string& s) {
   return (s.size() > 10 ? s.substr(0, 9) + "." : s);
 }
 
-// Custom algorithm to perfectly center text within a 10-character boundary
 static std::string centerField(const std::string& s, int width = 10) {
   if (s.length() >= static_cast<size_t>(width)) return s.substr(0, width);
   int pad_left = (width - s.length()) / 2;
@@ -57,48 +51,31 @@ static bool is_blank(const std::string& s) {
   return true;
 }
 
-// Official Phone Validation Algorithm (France, Spain, & Universal E.164)
 static bool isValidPhoneNumber(const std::string& phone) {
   std::string cleaned;
-
-  // 1. Clean the input (allow spaces, dots, and hyphens, but strip them out)
   for (size_t i = 0; i < phone.length(); ++i) {
     if (std::isdigit(phone[i]) || (i == 0 && phone[i] == '+')) {
       cleaned += phone[i];
     } else if (phone[i] != ' ' && phone[i] != '-' && phone[i] != '.') {
-      return false;  // Rejects letters and special symbols instantly
+      return false;
     }
   }
 
   if (cleaned.empty() || cleaned == "+") return false;
-
-  // 2. French Telecom Rules (ARCEP)
-  // Local: 10 digits starting with '0'. Intl: +33 followed by 9 digits.
   bool isFR = (cleaned.length() == 10 && cleaned[0] == '0') ||
               (cleaned.length() == 12 && cleaned.substr(0, 3) == "+33");
-
-  // 3. Spanish Telecom Rules (CNMC)
-  // Local: 9 digits starting with 6, 7, 8, or 9. Intl: +34 followed by 9
-  // digits.
   bool isES =
       (cleaned.length() == 9 && (cleaned[0] == '6' || cleaned[0] == '7' ||
                                  cleaned[0] == '8' || cleaned[0] == '9')) ||
       (cleaned.length() == 12 && cleaned.substr(0, 3) == "+34");
-
-  // 4. Universal E.164 Standard (Fallback)
-  // Must be between 9 and 15 digits total.
   bool isE164 = true;
   size_t digit_count = 0;
   for (size_t i = 0; i < cleaned.length(); i++) {
     if (std::isdigit(cleaned[i])) digit_count++;
   }
   if (digit_count < 9 || digit_count > 15) isE164 = false;
-
-  // Contact is valid if it matches France, Spain, or the Universal standard
   return isFR || isES || isE164;
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
 
 void PhoneBook::seed() {
   int i;
@@ -131,8 +108,6 @@ void PhoneBook::search() const {
     std::cout << C_YELLOW << "No contacts to search." << C_RESET << std::endl;
     return;
   }
-
-  // Print Beautiful Header with Perfectly Centered Titles
   std::cout << "\n" << C_DIM << BOX_TOP << C_RESET << std::endl;
   std::cout << C_DIM << V_BAR << C_RESET << C_BOLD << C_CYAN
             << centerField("index") << C_RESET << C_DIM << V_BAR << C_RESET
@@ -217,15 +192,13 @@ void PhoneBook::add() {
   if (!std::getline(std::cin, lastName) || is_blank(lastName)) return;
   std::cout << "Enter the nick name: ";
   if (!std::getline(std::cin, nickName) || is_blank(nickName)) return;
-
-  // Smart Phone Number Prompt Loop
   while (true) {
     std::cout << "Enter the phone number: ";
     if (!std::getline(std::cin, phoneNumber)) return;
     if (is_blank(phoneNumber)) return;
 
     if (isValidPhoneNumber(phoneNumber)) {
-      break;  // Valid! Exit the loop.
+      break;
     } else {
       std::cout << C_RED
                 << "Invalid format! Try local (e.g. 06... or 6...) or intl "
@@ -265,7 +238,7 @@ bool PhoneBook::pushContact(const Contact& c) {
       is_blank(c.getField(Contact::FIELD_LASTNAME)) ||
       is_blank(c.getField(Contact::FIELD_NICKNAME)) ||
       !isValidPhoneNumber(
-          c.getField(Contact::FIELD_PHONE)) ||  // Protect backend pushes too
+          c.getField(Contact::FIELD_PHONE)) ||
       is_blank(c.getField(Contact::FIELD_SECRET)))
     return false;
   this->contact[this->size] = c;

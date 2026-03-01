@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 23:48:29 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 00:01:23 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 18:14:32 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,12 +16,12 @@
 
 Dog::Dog() : Animal() {
   this->type = "Dog";
-  this->_brain = new Brain();  // Allocate new brain
+  this->_brain = new Brain();
   std::cout << GREEN << "Dog default constructor called" << RESET << std::endl;
 }
 
 Dog::Dog(const Dog& src) : Animal(src) {
-  this->_brain = new Brain(*src._brain);  // Deep Copy [cite: 201]
+  this->_brain = new Brain(*src._brain);
   std::cout << YELLOW << "Dog deep-copy constructor called" << RESET
             << std::endl;
 }
@@ -31,14 +31,14 @@ Dog& Dog::operator=(const Dog& rhs) {
             << std::endl;
   if (this != &rhs) {
     Animal::operator=(rhs);
-    delete this->_brain;                    // Prevent memory leak of old brain
-    this->_brain = new Brain(*rhs._brain);  // Deep Copy [cite: 201]
+    delete this->_brain;
+    this->_brain = new Brain(*rhs._brain);
   }
   return *this;
 }
 
 Dog::~Dog() {
-  delete this->_brain;  // Prevent memory leaks
+  delete this->_brain;
   std::cout << RED << "Dog destructor called" << RESET << std::endl;
 }
 

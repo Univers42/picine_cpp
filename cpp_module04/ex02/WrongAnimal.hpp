@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 23:48:58 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 00:03:59 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 18:14:51 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,8 +27,6 @@ class WrongAnimal {
   virtual ~WrongAnimal();
 
   std::string getType() const;
-
-  // DELIBERATELY MISSING 'virtual' KEYWORD TO BREAK POLYMORPHISM [cite: 181]
   void makeSound() const;
 };
 

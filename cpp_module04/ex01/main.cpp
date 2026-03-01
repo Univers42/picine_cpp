@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 23:49:24 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 00:00:39 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 18:14:39 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,8 +26,6 @@ int main() {
 
   const int numAnimals = 4;
   Animal* animals[numAnimals];
-
-  // Fill half with Dogs, half with Cats [cite: 197]
   std::cout << "[ Allocating Animals ]" << std::endl;
   for (int i = 0; i < numAnimals; i++) {
     if (i < numAnimals / 2) {
@@ -36,8 +34,6 @@ int main() {
       animals[i] = new Cat();
     }
   }
-
-  // Loop over array and delete every animal [cite: 198, 199]
   std::cout << "\n[ Deleting Animals ]" << std::endl;
   for (int i = 0; i < numAnimals; i++) {
     delete animals[i];

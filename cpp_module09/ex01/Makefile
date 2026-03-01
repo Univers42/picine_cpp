@@ -2,15 +2,15 @@
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror
 INC = -I.
-LDFLAGS =
-LIB_DIR =
-LIBS =
+LDFLAGS = 
+LIB_DIR = 
+LIBS = 
 
 # Add conditional -L flag only when LIB_DIR is set
 LIBDIR_FLAG := $(if $(strip $(LIB_DIR)),-L$(LIB_DIR),)
 
 # Source files (auto-detected or provided)
-SRC_LIST = BitcoinExchange.cpp main.cpp vendor/ft_string.cpp
+SRC_LIST = RPN.cpp main.cpp
 
 # Build directories
 BUILD_DIR = build
@@ -18,7 +18,7 @@ OBJ_DIR = $(BUILD_DIR)/obj
 BIN_DIR = $(BUILD_DIR)/bin
 
 # CRITICAL FIX: Isolate the Python target injection so rules compile to the right folder
-EXEC_BIN = $(BIN_DIR)/ex00
+EXEC_BIN = $(BIN_DIR)/ex01
 
 # Object files from SRC_LIST
 OBJ := $(addprefix $(OBJ_DIR)/,$(addsuffix .o,$(basename $(SRC_LIST))))
@@ -76,17 +76,6 @@ DIM = \033[2m
 GREEN = \033[92m
 CYAN = \033[96m
 YELLOW = \033[93m
-
-# ── Flag change detection ─────────────────────────────────────────────────────
-# When CXXFLAGS change (e.g. switching between make / make sqlite),
-# force a full rebuild so no stale .o files remain.
-FLAGS_FILE := $(OBJ_DIR)/.cxxflags
-CURRENT_FLAGS := $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS)
-
-ifneq ($(shell cat "$(FLAGS_FILE)" 2>/dev/null),$(CURRENT_FLAGS))
-$(shell mkdir -p $(OBJ_DIR) && printf '%s' '$(CURRENT_FLAGS)' > $(FLAGS_FILE))
-$(shell rm -f $(OBJ))
-endif
 
 # ── Main targets ──────────────────────────────────────────────────────────────
 all: $(EXEC_BIN)

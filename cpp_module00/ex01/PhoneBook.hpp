@@ -6,12 +6,12 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 15:15:39 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/02/28 15:19:41 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 18:03:21 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef CPP_MODULE00_MYAWESOMEPHONEBOOK_PHONEBOOK_HPP_
-#define CPP_MODULE00_MYAWESOMEPHONEBOOK_PHONEBOOK_HPP_
+#ifndef CPP_MODULE00_EX01_PHONEBOOK_HPP_
+#define CPP_MODULE00_EX01_PHONEBOOK_HPP_
 
 #include "Contact.hpp"
 
@@ -27,7 +27,7 @@ class PhoneBook {
  public:
   PhoneBook();
   void add();
-  void search() const; // Made const
+  void search() const;  // Made const
   void seed();
 
   int getCount() const;
@@ -35,4 +35,4 @@ class PhoneBook {
   bool pushContact(const Contact& c);
 };
 
-#endif  // CPP_MODULE00_MYAWESOMEPHONEBOOK_PHONEBOOK_HPP_
+#endif  // CPP_MODULE00_EX01_PHONEBOOK_HPP_

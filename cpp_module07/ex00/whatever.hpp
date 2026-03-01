@@ -6,12 +6,15 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/01 11:18:38 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 11:33:52 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:20:07 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef WHATEVER_HPP
-#define WHATEVER_HPP
+#ifndef CPP_MODULE07_EX00_WHATEVER_HPP_
+#define CPP_MODULE07_EX00_WHATEVER_HPP_
+
+#include <algorithm>
+#include <utility>
 
 /**
  * @brief Swaps the values of two variables.
@@ -52,4 +55,4 @@ const T& max(const T& a, const T& b) {
   return ((a > b) ? a : b);
 }
 
-#endif // WHATEVER_HPP
+#endif  // CPP_MODULE07_EX00_WHATEVER_HPP_

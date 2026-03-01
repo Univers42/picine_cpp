@@ -6,11 +6,12 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 23:48:46 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/02/28 23:48:47 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:24:27 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Cat.hpp"
+#include <iostream>
 
 Cat::Cat() : Animal() {
   this->type = "Cat";  // Set type to Cat [cite: 162]

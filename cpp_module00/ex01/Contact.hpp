@@ -6,12 +6,12 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/28 19:58:06 by marvin            #+#    #+#             */
-/*   Updated: 2026/02/28 15:19:21 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 18:03:43 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef CPP_MODULE00_MYAWESOMEPHONEBOOK_CONTACT_HPP_
-#define CPP_MODULE00_MYAWESOMEPHONEBOOK_CONTACT_HPP_
+#ifndef CPP_MODULE00_EX01_CONTACT_HPP_
+#define CPP_MODULE00_EX01_CONTACT_HPP_
 
 #include <string>
 
@@ -35,4 +35,4 @@ class Contact {
   static const std::string& emptyString();
 };
 
-#endif  // CPP_MODULE00_MYAWESOMEPHONEBOOK_CONTACT_HPP_
+#endif  // CPP_MODULE00_EX01_CONTACT_HPP_

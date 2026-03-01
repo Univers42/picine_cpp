@@ -6,11 +6,12 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/01 00:16:46 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 00:17:08 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:26:45 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Character.hpp"
+#include <string>
 
 Character::Character() : _name("Default") {
   for (int i = 0; i < 4; i++) _inventory[i] = NULL;

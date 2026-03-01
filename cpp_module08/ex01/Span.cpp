@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/01 12:30:14 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 12:44:52 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:18:20 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,8 +45,8 @@ unsigned int Span::longestSpan() const {
   int maxVal = *std::max_element(_vec.begin(), _vec.end());
 
   // to prevent signed overflow!
-  return static_cast<unsigned int>(static_cast<long long>(maxVal) -
-                                   static_cast<long long>(minVal));
+  return static_cast<unsigned int>(static_cast<int64_t>(maxVal) -
+                                   static_cast<int64_t>(minVal));
 }
 
 unsigned int Span::shortestSpan() const {
@@ -60,8 +60,8 @@ unsigned int Span::shortestSpan() const {
   for (size_t i = 1; i < sortedVec.size(); ++i) {
     // to prevent signed overflow!
     unsigned int diff =
-        static_cast<unsigned int>(static_cast<long long>(sortedVec[i]) -
-                                  static_cast<long long>(sortedVec[i - 1]));
+        static_cast<unsigned int>(static_cast<int64_t>(sortedVec[i]) -
+                                  static_cast<int64_t>(sortedVec[i - 1]));
     if (diff < minSpan) minSpan = diff;
   }
 

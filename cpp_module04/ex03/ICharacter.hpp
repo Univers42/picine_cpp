@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/01 00:15:20 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 00:18:42 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:25:54 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,4 +26,4 @@ class ICharacter {
   virtual void use(int idx, ICharacter& target) = 0;
 };
 
-#endif
+#endif  // CPP_MODULE04_EX03_ICHARACTER_HPP_

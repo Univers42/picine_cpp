@@ -13,21 +13,23 @@
 #include <cctype>
 #include <iostream>
 #include <string>
+
 #include "PhoneBook.hpp"
 
 #define PAT_SPACE " \t\n\r\v\f"
 
 // ── UI Styling Macros ────────────────────────────────────────────────────────
-#define C_RESET   "\033[0m"
-#define C_BOLD    "\033[1m"
-#define C_DIM     "\033[2m"
-#define C_CYAN    "\033[36m"
-#define C_YELLOW  "\033[33m"
+#define C_RESET "\033[0m"
+#define C_BOLD "\033[1m"
+#define C_DIM "\033[2m"
+#define C_CYAN "\033[36m"
+#define C_YELLOW "\033[33m"
 
 std::string strtolower(const std::string& in) {
   std::string out;
   for (std::size_t i = 0; i < in.size(); ++i) {
-    out.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(in[i]))));
+    out.push_back(
+        static_cast<char>(std::tolower(static_cast<unsigned char>(in[i]))));
   }
   return out;
 }
@@ -49,11 +51,14 @@ int main() {
   std::cout << "╚══════════════════════════════════════╝\n" << C_RESET;
   std::cout << C_DIM << "Commands: " << C_YELLOW << "ADD" << C_DIM << ", "
             << C_YELLOW << "SEARCH" << C_DIM << ", " << C_YELLOW << "SEED"
-            << C_DIM << ", " << C_YELLOW << "EXIT\n" << C_RESET;
+            << C_DIM << ", " << C_YELLOW << "EXIT\n"
+            << C_RESET;
 
   while (true) {
     // Professional styled prompt
-    std::cout << "\n" << C_BOLD << C_CYAN << "PhoneBook" << C_RESET << " > " << std::flush;
+    std::cout << "\n"
+              << C_BOLD << C_CYAN << "PhoneBook" << C_RESET << " > "
+              << std::flush;
 
     // Catch Ctrl+D securely
     if (!std::getline(std::cin, input)) {

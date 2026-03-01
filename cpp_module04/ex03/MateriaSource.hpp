@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/01 00:17:18 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 00:17:23 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:27:46 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #ifndef CPP_MODULE04_EX03_MATERIASOURCE_HPP_
 #define CPP_MODULE04_EX03_MATERIASOURCE_HPP_
 
+#include <string>
 #include "AMateria.hpp"
 #include "IMateriaSource.hpp"
 
@@ -30,4 +31,4 @@ class MateriaSource : public IMateriaSource {
   virtual void learnMateria(AMateria*);
   virtual AMateria* createMateria(std::string const& type);
 };
-#endif
+#endif  // CPP_MODULE04_EX03_MATERIASOURCE_HPP_

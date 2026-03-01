@@ -6,12 +6,13 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/01 00:17:24 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 00:17:25 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:26:52 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 // MateriaSource.cpp
 #include "MateriaSource.hpp"
+#include <string>
 
 MateriaSource::MateriaSource() {
   for (int i = 0; i < 4; i++) _templates[i] = NULL;

@@ -6,11 +6,13 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 23:47:51 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/02/28 23:47:53 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:23:40 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Animal.hpp"
+#include <iostream>
+#include <string>
 
 Animal::Animal() : type("Generic Animal") {
   std::cout << GREEN << "Animal default constructor called" << RESET

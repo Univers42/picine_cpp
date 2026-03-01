@@ -6,9 +6,11 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 18:08:29 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/02/28 18:39:59 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:47:15 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+#include <iostream>
 
 #include "Fixed.hpp"
 
@@ -25,12 +27,12 @@ Fixed::Fixed(const float f)
   std::cout << "Float constructor called" << std::endl;
 }
 
-Fixed::Fixed(const Fixed &other) {
+Fixed::Fixed(const Fixed& other) {
   std::cout << "Copy constructor called" << std::endl;
   *this = other;
 }
 
-Fixed &Fixed::operator=(const Fixed &other) {
+Fixed& Fixed::operator=(const Fixed& other) {
   std::cout << "Copy assignment operator called" << std::endl;
   if (this != &other) this->_fixedPointValue = other.getRawBits();
   return *this;
@@ -43,14 +45,14 @@ int Fixed::getRawBits(void) const { return this->_fixedPointValue; }
 void Fixed::setRawBits(int const raw) { this->_fixedPointValue = raw; }
 
 float Fixed::toFloat(void) const {
-  return (float)this->_fixedPointValue / (1 << _fractionalBits);
+  return static_cast<float>(this->_fixedPointValue) / (1 << _fractionalBits);
 }
 
 // Standard right shift is usually okay, but casting to float
 // first ensures the truncation behaves as expected for negatives
 int Fixed::toInt(void) const { return static_cast<int>(this->toFloat()); }
 
-std::ostream &operator<<(std::ostream &o, Fixed const &i) {
+std::ostream& operator<<(std::ostream& o, Fixed const& i) {
   o << i.toFloat();
   return o;
 }

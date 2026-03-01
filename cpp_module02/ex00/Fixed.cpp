@@ -6,9 +6,11 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 17:54:34 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/02/28 18:06:35 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:34:53 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+#include <iostream>
 
 #include "Fixed.hpp"
 
@@ -24,12 +26,12 @@ Fixed::Fixed() : _fixedPointValue(0) {
   std::cout << GREEN << "Default constructor called" << RESET << std::endl;
 }
 
-Fixed::Fixed(const Fixed &other) {
+Fixed::Fixed(const Fixed& other) {
   std::cout << YELLOW << "Copy constructor called" << RESET << std::endl;
   *this = other;
 }
 
-Fixed &Fixed::operator=(const Fixed &other) {
+Fixed& Fixed::operator=(const Fixed& other) {
   std::cout << CYAN << "Copy assignment operator called" << RESET << std::endl;
   if (this != &other) this->_fixedPointValue = other.getRawBits();
   return *this;

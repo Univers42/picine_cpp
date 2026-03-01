@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/01 00:15:48 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 00:19:08 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:25:48 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,4 +25,4 @@ class Ice : public AMateria {
   virtual AMateria* clone() const;
   virtual void use(ICharacter& target);
 };
-#endif
+#endif  // CPP_MODULE04_EX03_ICE_HPP_

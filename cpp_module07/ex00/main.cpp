@@ -10,8 +10,9 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <string>
 #include <iostream>
+#include <string>
+
 #include "whatever.hpp"
 
 /**
@@ -21,8 +22,7 @@
  * for our custom template functions rather than accidentally pulling in the
  * default ones from the std library
  */
-int main(void)
-{
+int main(void) {
   int a = 2;
   int b = 3;
 

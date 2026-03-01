@@ -6,11 +6,12 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/01 00:16:26 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 00:16:28 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:26:30 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Ice.hpp"
+#include <iostream>
 
 Ice::Ice() : AMateria("ice") {}  // Type set to "ice"
 Ice::Ice(const Ice& src) : AMateria(src) {}

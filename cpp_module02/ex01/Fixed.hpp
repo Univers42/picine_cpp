@@ -6,12 +6,12 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 18:08:24 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/02/28 18:37:36 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:47:15 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef FIXED_HPP
-#define FIXED_HPP
+#ifndef CPP_MODULE02_EX01_FIXED_HPP_
+#define CPP_MODULE02_EX01_FIXED_HPP_
 #include <cmath>
 #include <iostream>
 
@@ -22,17 +22,17 @@ class Fixed {
 
  public:
   Fixed();
-  Fixed(const Fixed &other);
-  Fixed &operator=(const Fixed &other);
+  Fixed(const Fixed& other);
+  Fixed& operator=(const Fixed& other);
   ~Fixed();
-  Fixed(const int n);
-  Fixed(const float f);
+  explicit Fixed(const int n);
+  explicit Fixed(const float f);
   int getRawBits(void) const;
   void setRawBits(int const raw);
   float toFloat(void) const;
   int toInt(void) const;
 };
 
-std::ostream &operator<<(std::ostream &o, Fixed const &i);
+std::ostream& operator<<(std::ostream& o, Fixed const& i);
 
-#endif
+#endif  // CPP_MODULE02_EX01_FIXED_HPP_

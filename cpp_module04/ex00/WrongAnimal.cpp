@@ -6,11 +6,13 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 23:49:03 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/02/28 23:49:05 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:23:36 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "WrongAnimal.hpp"
+#include <iostream>
+#include <string>
 
 WrongAnimal::WrongAnimal() : type("Wrong Generic") {
   std::cout << "WrongAnimal default constructor" << std::endl;

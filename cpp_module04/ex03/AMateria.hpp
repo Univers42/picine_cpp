@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/01 00:15:35 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 00:15:37 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:25:33 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,4 +34,4 @@ class AMateria {
   virtual void use(ICharacter& target);
 };
 
-#endif
+#endif  // CPP_MODULE04_EX03_AMATERIA_HPP_

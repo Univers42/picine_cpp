@@ -6,30 +6,33 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/29 01:07:41 by marvin            #+#    #+#             */
-/*   Updated: 2026/02/28 15:48:07 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 18:05:15 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "PhoneBook.hpp"
+
 #include <cctype>
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
 
+#include <string>
+#include <utility>
 // ── UI Styling Macros ────────────────────────────────────────────────────────
-#define C_RESET   "\033[0m"
-#define C_BOLD    "\033[1m"
-#define C_DIM     "\033[2m"
-#define C_CYAN    "\033[36m"
-#define C_YELLOW  "\033[33m"
-#define C_GREEN   "\033[32m"
-#define C_RED     "\033[31m"
+#define C_RESET "\033[0m"
+#define C_BOLD "\033[1m"
+#define C_DIM "\033[2m"
+#define C_CYAN "\033[36m"
+#define C_YELLOW "\033[33m"
+#define C_GREEN "\033[32m"
+#define C_RED "\033[31m"
 
 // Unicode Box Drawing Characters
 #define BOX_TOP "┌──────────┬──────────┬──────────┬──────────┐"
 #define BOX_MID "├──────────┼──────────┼──────────┼──────────┤"
 #define BOX_BOT "└──────────┴──────────┴──────────┴──────────┘"
-#define V_BAR   "│"
+#define V_BAR "│"
 // ─────────────────────────────────────────────────────────────────────────────
 
 PhoneBook::PhoneBook() : cap(MAX_CONTACT), size(0), count(0) {}
@@ -63,7 +66,7 @@ static bool isValidPhoneNumber(const std::string& phone) {
     if (std::isdigit(phone[i]) || (i == 0 && phone[i] == '+')) {
       cleaned += phone[i];
     } else if (phone[i] != ' ' && phone[i] != '-' && phone[i] != '.') {
-      return false; // Rejects letters and special symbols instantly
+      return false;  // Rejects letters and special symbols instantly
     }
   }
 
@@ -75,9 +78,12 @@ static bool isValidPhoneNumber(const std::string& phone) {
               (cleaned.length() == 12 && cleaned.substr(0, 3) == "+33");
 
   // 3. Spanish Telecom Rules (CNMC)
-  // Local: 9 digits starting with 6, 7, 8, or 9. Intl: +34 followed by 9 digits.
-  bool isES = (cleaned.length() == 9 && (cleaned[0] == '6' || cleaned[0] == '7' || cleaned[0] == '8' || cleaned[0] == '9')) ||
-              (cleaned.length() == 12 && cleaned.substr(0, 3) == "+34");
+  // Local: 9 digits starting with 6, 7, 8, or 9. Intl: +34 followed by 9
+  // digits.
+  bool isES =
+      (cleaned.length() == 9 && (cleaned[0] == '6' || cleaned[0] == '7' ||
+                                 cleaned[0] == '8' || cleaned[0] == '9')) ||
+      (cleaned.length() == 12 && cleaned.substr(0, 3) == "+34");
 
   // 4. Universal E.164 Standard (Fallback)
   // Must be between 9 and 15 digits total.
@@ -100,9 +106,11 @@ void PhoneBook::seed() {
       {"Alice", "Smith", "Al", "06 12 34 56 78", "French local"},
       {"Maximilian", "Von-Trapp", "Maxi", "+33-6-11-22-33-44", "French Intl"},
       {"O'Connor", "John-Paul", "JP", "612 345 678", "Spanish local"},
-      {"..........", "----------", "________", "+34 699 888 777", "Spanish Intl"},
+      {"..........", "----------", "________", "+34 699 888 777",
+       "Spanish Intl"},
       {"Short", "Cut", "S", "+1 (800) 123-4567", "Universal standard"},
-      {"1234567890", "0987654321", "Numbers", "01.23.45.67.89", "Dotted format"}};
+      {"1234567890", "0987654321", "Numbers", "01.23.45.67.89",
+       "Dotted format"}};
   const int n = 6;
 
   for (i = 0; i < n && i < this->cap; ++i) {
@@ -114,7 +122,8 @@ void PhoneBook::seed() {
   }
   this->count = i;
   this->size = i % this->cap;
-  std::cout << C_GREEN << "Phonebook seeded with " << i << " telecom-verified contacts." << C_RESET << "\n";
+  std::cout << C_GREEN << "Phonebook seeded with " << i
+            << " telecom-verified contacts." << C_RESET << "\n";
 }
 
 void PhoneBook::search() const {
@@ -125,27 +134,32 @@ void PhoneBook::search() const {
 
   // Print Beautiful Header with Perfectly Centered Titles
   std::cout << "\n" << C_DIM << BOX_TOP << C_RESET << std::endl;
-  std::cout << C_DIM << V_BAR << C_RESET
-            << C_BOLD << C_CYAN << centerField("index") << C_RESET << C_DIM << V_BAR << C_RESET
-            << C_BOLD << C_CYAN << centerField("first name") << C_RESET << C_DIM << V_BAR << C_RESET
-            << C_BOLD << C_CYAN << centerField("last name") << C_RESET << C_DIM << V_BAR << C_RESET
-            << C_BOLD << C_CYAN << centerField("nickname") << C_RESET << C_DIM << V_BAR << C_RESET
+  std::cout << C_DIM << V_BAR << C_RESET << C_BOLD << C_CYAN
+            << centerField("index") << C_RESET << C_DIM << V_BAR << C_RESET
+            << C_BOLD << C_CYAN << centerField("first name") << C_RESET << C_DIM
+            << V_BAR << C_RESET << C_BOLD << C_CYAN << centerField("last name")
+            << C_RESET << C_DIM << V_BAR << C_RESET << C_BOLD << C_CYAN
+            << centerField("nickname") << C_RESET << C_DIM << V_BAR << C_RESET
             << std::endl;
   std::cout << C_DIM << BOX_MID << C_RESET << std::endl;
 
   for (int i = 0; i < this->count; ++i) {
-    std::cout << C_DIM << V_BAR << C_RESET
-              << C_YELLOW << std::right << std::setw(10) << i << C_RESET << C_DIM << V_BAR << C_RESET
-              << std::left << std::setw(10) << formatField(this->contact[i].getField(Contact::FIELD_NAME)) << C_DIM << V_BAR << C_RESET
-              << std::left << std::setw(10) << formatField(this->contact[i].getField(Contact::FIELD_LASTNAME)) << C_DIM << V_BAR << C_RESET
-              << std::left << std::setw(10) << formatField(this->contact[i].getField(Contact::FIELD_NICKNAME)) << C_DIM << V_BAR << C_RESET
-              << std::endl;
+    std::cout << C_DIM << V_BAR << C_RESET << C_YELLOW << std::right
+              << std::setw(10) << i << C_RESET << C_DIM << V_BAR << C_RESET
+              << std::left << std::setw(10)
+              << formatField(this->contact[i].getField(Contact::FIELD_NAME))
+              << C_DIM << V_BAR << C_RESET << std::left << std::setw(10)
+              << formatField(this->contact[i].getField(Contact::FIELD_LASTNAME))
+              << C_DIM << V_BAR << C_RESET << std::left << std::setw(10)
+              << formatField(this->contact[i].getField(Contact::FIELD_NICKNAME))
+              << C_DIM << V_BAR << C_RESET << std::endl;
   }
   std::cout << C_DIM << BOX_BOT << C_RESET << std::endl;
 
   std::string input;
   while (true) {
-    std::cout << C_BOLD << "\nEnter index to display " << C_DIM << "(empty to cancel): " << C_RESET;
+    std::cout << C_BOLD << "\nEnter index to display " << C_DIM
+              << "(empty to cancel): " << C_RESET;
     if (!std::getline(std::cin, input)) {
       std::cout << "\nAborted." << std::endl;
       return;
@@ -161,7 +175,8 @@ void PhoneBook::search() const {
       if (!std::isdigit(static_cast<unsigned char>(input[k]))) ok = false;
 
     if (!ok) {
-      std::cout << C_RED << "Invalid index. Must be a number." << C_RESET << std::endl;
+      std::cout << C_RED << "Invalid index. Must be a number." << C_RESET
+                << std::endl;
       continue;
     }
 
@@ -171,12 +186,22 @@ void PhoneBook::search() const {
       continue;
     }
 
-    std::cout << "\n" << C_BOLD << C_CYAN << "── Contact #" << idx << " ──" << C_RESET << std::endl;
-    std::cout << C_DIM << "First Name : " << C_RESET << this->contact[idx].getField(Contact::FIELD_NAME) << std::endl;
-    std::cout << C_DIM << "Last Name  : " << C_RESET << this->contact[idx].getField(Contact::FIELD_LASTNAME) << std::endl;
-    std::cout << C_DIM << "Nickname   : " << C_RESET << this->contact[idx].getField(Contact::FIELD_NICKNAME) << std::endl;
-    std::cout << C_DIM << "Phone      : " << C_RESET << this->contact[idx].getField(Contact::FIELD_PHONE) << std::endl;
-    std::cout << C_DIM << "Secret     : " << C_RESET << this->contact[idx].getField(Contact::FIELD_SECRET) << std::endl;
+    std::cout << "\n"
+              << C_BOLD << C_CYAN << "── Contact #" << idx << " ──" << C_RESET
+              << std::endl;
+    std::cout << C_DIM << "First Name : " << C_RESET
+              << this->contact[idx].getField(Contact::FIELD_NAME) << std::endl;
+    std::cout << C_DIM << "Last Name  : " << C_RESET
+              << this->contact[idx].getField(Contact::FIELD_LASTNAME)
+              << std::endl;
+    std::cout << C_DIM << "Nickname   : " << C_RESET
+              << this->contact[idx].getField(Contact::FIELD_NICKNAME)
+              << std::endl;
+    std::cout << C_DIM << "Phone      : " << C_RESET
+              << this->contact[idx].getField(Contact::FIELD_PHONE) << std::endl;
+    std::cout << C_DIM << "Secret     : " << C_RESET
+              << this->contact[idx].getField(Contact::FIELD_SECRET)
+              << std::endl;
     return;
   }
 }
@@ -200,9 +225,12 @@ void PhoneBook::add() {
     if (is_blank(phoneNumber)) return;
 
     if (isValidPhoneNumber(phoneNumber)) {
-      break; // Valid! Exit the loop.
+      break;  // Valid! Exit the loop.
     } else {
-      std::cout << C_RED << "Invalid format! Try local (e.g. 06... or 6...) or intl (+33..., +34...)\n" << C_RESET;
+      std::cout << C_RED
+                << "Invalid format! Try local (e.g. 06... or 6...) or intl "
+                   "(+33..., +34...)\n"
+                << C_RESET;
     }
   }
 
@@ -236,7 +264,8 @@ bool PhoneBook::pushContact(const Contact& c) {
   if (is_blank(c.getField(Contact::FIELD_NAME)) ||
       is_blank(c.getField(Contact::FIELD_LASTNAME)) ||
       is_blank(c.getField(Contact::FIELD_NICKNAME)) ||
-      !isValidPhoneNumber(c.getField(Contact::FIELD_PHONE)) || // Protect backend pushes too
+      !isValidPhoneNumber(
+          c.getField(Contact::FIELD_PHONE)) ||  // Protect backend pushes too
       is_blank(c.getField(Contact::FIELD_SECRET)))
     return false;
   this->contact[this->size] = c;

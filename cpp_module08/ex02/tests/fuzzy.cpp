@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/01 12:59:21 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 12:59:35 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:18:59 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,7 +105,7 @@ int main() {
       << YELLOW
       << "[ Action ] Iterating over the remaining 50,000 to calculate sum..."
       << RESET << std::endl;
-  long long sum = 0;
+  int64_t sum = 0;
   for (MutantStack<int>::iterator it = bigStack.begin(); it != bigStack.end();
        ++it) {
     sum += *it;

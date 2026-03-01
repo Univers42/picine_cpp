@@ -1,195 +1,189 @@
-# Remote URLs for vendor dependencies
-GTEST_URL := https://github.com/google/googletest.git
-LIBCPP_URL := git@github.com:Univers42/libcpp.git
-SCRIPTS_URL := git@github.com:Univers42/scripts.git
+# Project Configuration
+CXX = c++
+CXXFLAGS = -Wall -Wextra -Werror
+INC = -I.
+LDFLAGS = 
+LIB_DIR = 
+LIBS = 
 
-# Variables
-CXX := c++
-CXXFLAGS := -Wall -Wextra -Werror
-# Only include root .cpp files in SRCS (not tests/*.cpp)
-SRCS := Account.cpp tests.cpp
-NAME := tests
-BUILD_DIR := build
-BIN_DIR := $(BUILD_DIR)/bin
-OBJ_DIR := $(BUILD_DIR)/obj
-TARGET := $(BIN_DIR)/$(NAME)
-INCS_DIR := -I.
+# Add conditional -L flag only when LIB_DIR is set
+LIBDIR_FLAG := $(if $(strip $(LIB_DIR)),-L$(LIB_DIR),)
 
-# Vendor directories (relative to module root)
-VENDOR_DIR := ../vendor
-GTEST_DIR := $(VENDOR_DIR)/gtest
-LIBCPP_DIR := $(VENDOR_DIR)/libcpp
-SCRIPTS_DIR := $(VENDOR_DIR)/scripts
-GTEST_LIB := $(GTEST_DIR)/lib/libgtest.a
-GTEST_MAIN_LIB := $(GTEST_DIR)/lib/libgtest_main.a
-GTEST_INC := -I$(GTEST_DIR)/include -I$(GTEST_DIR)/googletest/include
+# Source files (auto-detected or provided)
+SRC_LIST = Account.cpp tests.cpp
 
-# Test sources and binaries
-TEST_SRCS := $(wildcard tests/*.cpp)
-TEST_BINS := $(patsubst tests/%.cpp,$(BIN_DIR)/%,$(TEST_SRCS))
-TEST_OBJS := $(patsubst tests/%.cpp,$(OBJ_DIR)/tests/%.o,$(TEST_SRCS))
+# Build directories
+BUILD_DIR = build
+OBJ_DIR = $(BUILD_DIR)/obj
+BIN_DIR = $(BUILD_DIR)/bin
 
-RM := rm -rf
-# Object files
-OBJS := $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SRCS))
-# Exclude main.o for test linking
-OBJS_NO_MAIN := $(filter-out $(OBJ_DIR)/main.o,$(OBJS))
+# CRITICAL FIX: Isolate the Python target injection so rules compile to the right folder
+EXEC_BIN = $(BIN_DIR)/ex02
 
-CXXSTD98 := -std=c++17
-CXXSTD17 := -std=c++17
+# Object files from SRC_LIST
+OBJ := $(addprefix $(OBJ_DIR)/,$(addsuffix .o,$(basename $(SRC_LIST))))
 
-# Colors and Formatting
+# Exclude main.o from the object list so tests don't get double main() functions
+OBJ_NO_MAIN := $(filter-out %/main.o %/Main.o,$(OBJ))
+
+GTEST_DIR = ../../vendor/gtest
+GTEST_LIB_PATH = $(GTEST_DIR)/lib
+# Only add -lgtest flags if the library files actually exist
+HAS_GTEST := $(shell [ -f "$(GTEST_LIB_PATH)/libgtest.a" ] && echo 1 || echo 0)
+
+ifeq ($(HAS_GTEST),1)
+    GTEST_LIBS = -L$(GTEST_LIB_PATH) -lgtest -lgtest_main -pthread
+    GTEST_DEF = -DHAVE_GTEST=1
+else
+    GTEST_LIBS =
+    GTEST_DEF = -DHAVE_GTEST=0
+endif
+
+# Checker Script
+CHECKER = @@CHECKER@@
+
+# Test Configuration
+TEST_SRCS := $(wildcard tests/*.cpp tests/*.c)
+TEST_BINS := $(foreach f,$(TEST_SRCS),$(BIN_DIR)/$(basename $(notdir $(f))))
+
+# libcpp control flag
+LCPP ?= 0
+
+# Auto-detect include directories
+ifeq ($(strip $(INC)),)
+ifeq ($(LCPP),0)
+INC :=
+else
+INC := -I$(LIB_DIR) -I$(LIB_DIR)/include -I$(LIB_DIR)/inc
+endif
+endif
+
+# Pre-include libcpp header
+ifeq ($(LCPP),0)
+CPPFLAGS :=
+else
+ifeq ($(wildcard $(LIB_DIR)/libcpp.h),)
+CPPFLAGS :=
+else
+CPPFLAGS := -include $(LIB_DIR)/libcpp.h
+endif
+endif
+
+# Colors
 RESET = \033[0m
 BOLD = \033[1m
 DIM = \033[2m
 GREEN = \033[92m
 CYAN = \033[96m
 YELLOW = \033[93m
-GRAY = \033[90m
-RED = \033[91m
 
-# Default target: build only the object files (no linking)
-all: objs_only
+# ── Main targets ──────────────────────────────────────────────────────────────
+all: $(EXEC_BIN)
 
-objs_only: $(OBJS)
-	@printf "  $(GREEN)●$(RESET) $(BOLD)All object files built (no binaries).$(RESET)\n"
+$(EXEC_BIN): $(OBJ) | $(BIN_DIR)
+	@printf "  $(DIM)linking$(RESET)      $(CYAN)$(notdir $@)$(RESET)\n"
+	@if [ "$(LCPP)" != "0" ]; then $(MAKE) -C $(LIB_DIR); fi
+	@libfile=""; \
+	if [ -f "$(LIB_DIR)/libcpp.a" ]; then libfile="$(LIB_DIR)/libcpp.a"; \
+	elif [ -f "$(LIB_DIR)/libcpp.so" ]; then libfile="$(LIB_DIR)/libcpp.so"; fi; \
+	if [ -n "$$libfile" ]; then \
+		$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(OBJ) -o $@ $(LDFLAGS) $$libfile; \
+	else \
+		$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(OBJ) -o $@ $(LIBDIR_FLAG) $(LDFLAGS) $(LIBS); \
+	fi
+	@printf "\n  $(GREEN)●$(RESET) $(BOLD)Build complete$(RESET) $(DIM)→ $@$(RESET)\n\n"
 
-# Main program build (explicit, always c++98)
-.PHONY: main
-main: $(OBJ_DIR)/main.o $(filter-out $(OBJ_DIR)/main.o,$(OBJS)) | $(BIN_DIR)
-	@printf "  $(DIM)linking$(RESET)      $(CYAN)main$(RESET)\n"
-	@$(CXX) $(CXXFLAGS) -std=c++98 $^ -o $(BIN_DIR)/main
-	@printf "\n  $(GREEN)●$(RESET) $(BOLD)Main program built$(RESET) $(DIM)→ $(BIN_DIR)/main$(RESET)\n\n"
+# Run target to easily execute the root program
+run: $(EXEC_BIN)
+	@printf "  $(CYAN)Running $(EXEC_BIN)...$(RESET)\n\n"
+	@./$(EXEC_BIN)
 
-# Explicit tests target: compile and link Account.cpp and tests.cpp with C++98
-.PHONY: tests
-tests: $(BIN_DIR) Account.cpp tests.cpp
-	@printf "  $(DIM)linking$(RESET)      $(CYAN)tests$(RESET)\n"
-	@$(CXX) $(CXXFLAGS) $(CXXSTD98) Account.cpp tests.cpp -o $(BIN_DIR)/tests
-	@printf "  $(GREEN)●$(RESET) $(BOLD)Tests built$(RESET) $(DIM)→ $(BIN_DIR)/tests$(RESET)\n"
-
-# Implicit rule for object files
+# Compile main sources
 $(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
 	@mkdir -p $(dir $@)
 	@printf "  $(DIM)compiling$(RESET)    $(CYAN)%-30s$(RESET)\n" "$(notdir $<)"
-	@$(CXX) $(CXXFLAGS) $(CXXSTD98) $(INCS_DIR) -c $< -o $@
+	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) -c $< -o $@
 
-# Directory creation
-$(BIN_DIR) $(OBJ_DIR):
-	@mkdir -p $@
+$(OBJ_DIR)/%.o: %.c | $(OBJ_DIR)
+	@mkdir -p $(dir $@)
+	@printf "  $(DIM)compiling$(RESET)    $(CYAN)%-30s$(RESET)\n" "$(notdir $<)"
+	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) -x c++ -c $< -o $@
 
-# Test build: ensure vendor, gtest, and libcpp are present
-.PHONY: test
-
-test: vendor $(GTEST_LIB) $(GTEST_MAIN_LIB) $(TEST_BINS)
-
-# Build all test binaries
-$(BIN_DIR)/%: $(OBJ_DIR)/tests/%.o $(OBJS_NO_MAIN) $(GTEST_LIB) $(GTEST_MAIN_LIB) | $(BIN_DIR)
-	@printf "  $(DIM)linking test$(RESET)   $(CYAN)%-30s$(RESET)\n" "$(notdir $@)"
-	@$(CXX) $(CXXFLAGS) $(CXXSTD17) $^ -o $@ $(GTEST_INC) -L$(GTEST_DIR)/lib -lgtest -lgtest_main -pthread 2>&1
-	@printf "  $(GREEN)●$(RESET) $(BOLD)Test build complete$(RESET) $(DIM)→ $@$(RESET)\n"
-
-# Implicit rule for test object files
+# ── Test targets ──────────────────────────────────────────────────────────────
+# Compile test sources
 $(OBJ_DIR)/tests/%.o: tests/%.cpp | $(OBJ_DIR)/tests
 	@mkdir -p $(dir $@)
 	@printf "  $(DIM)compiling test$(RESET) $(CYAN)%-30s$(RESET)\n" "$(notdir $<)"
-	@$(CXX) $(CXXFLAGS) $(CXXSTD17) $(INCS_DIR) $(GTEST_INC) -c $< -o $@
+	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(GTEST_INC) $(GTEST_DEF) -I. -c $< -o $@
 
-$(OBJ_DIR)/tests:
-	@mkdir -p $@
+$(BIN_DIR)/%: $(OBJ_DIR)/tests/%.o $(OBJ_NO_MAIN) | $(BIN_DIR)
+	@printf "  $(DIM)linking test$(RESET)   $(CYAN)%-30s$(RESET)\n" "$(notdir $@)"
+	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(OBJ_NO_MAIN) $< -o $@ $(GTEST_LIBS) $(LDFLAGS) $(LIBS)
+	@printf "  $(GREEN)●$(RESET) $(BOLD)Test build complete$(RESET) $(DIM)→ $@$(RESET)\n"
 
-# Vendor setup
-.PHONY: vendor
-vendor: $(VENDOR_DIR) $(GTEST_DIR) $(LIBCPP_DIR) $(SCRIPTS_DIR)
-
-$(VENDOR_DIR):
-	@mkdir -p $@
-
-$(GTEST_DIR): | $(VENDOR_DIR)
-	@if [ ! -d "$@" ]; then git clone $(GTEST_URL) $@; fi
-	@mkdir -p $@/build
-
-$(LIBCPP_DIR): | $(VENDOR_DIR)
-	@if [ ! -d "$@" ]; then git clone $(LIBCPP_URL) $@; fi
-
-$(SCRIPTS_DIR): | $(VENDOR_DIR)
-	@if [ ! -d "$@" ]; then git clone $(SCRIPTS_URL) $@; fi
-
-# Build Google Test static libraries if missing
-$(GTEST_LIB) $(GTEST_MAIN_LIB): | $(GTEST_DIR)
-	@if [ ! -f "$(GTEST_LIB)" ] || [ ! -f "$(GTEST_MAIN_LIB)" ]; then \
-		cd $(GTEST_DIR)/build && cmake .. && $(MAKE) && \
-		mkdir -p ../lib && \
-		cp lib/libgtest.a ../lib/ && \
-		cp lib/libgtest_main.a ../lib/; \
+# Dynamically build and execute any tests found in the tests/ directory
+test: $(TEST_BINS)
+	@if [ -z "$(TEST_BINS)" ]; then \
+		printf "\n  $(YELLOW)⚠$(RESET) No tests found in tests/ directory.\n"; \
+	else \
+		printf "\n  $(GREEN)●$(RESET) Built $(words $(TEST_BINS)) test(s)\n"; \
+		for test_bin in $(TEST_BINS); do \
+			echo "  $(CYAN)Executing $$test_bin...$(RESET)"; \
+		done; \
 	fi
 
-# Python virtual environment for diagnostics
-VENV_DIR := .venv
-VENV_PY := $(VENV_DIR)/bin/python3
-VENV_PIP := $(VENV_DIR)/bin/pip3
-VENV_ACT := . $(VENV_DIR)/bin/activate
-
-.PHONY: virt_env shut_virt_env diagnostic
-
-virt_env:
-	@if [ ! -d $(VENV_DIR) ]; then \
-		printf "  $(DIM)creating$(RESET)     $(YELLOW)python venv$(RESET)\n"; \
-		python3 -m venv $(VENV_DIR); \
+# Google Test build helper (Only runs if 'make gtest' is explicitly called)
+gtest:
+	@if [ ! -d "$(GTEST_DIR)/build" ]; then \
+		mkdir -p "$(GTEST_DIR)/build"; \
 	fi
-	@printf "  $(DIM)installing$(RESET)   $(YELLOW)python tools$(RESET)\n"
-	@$(VENV_PIP) install --upgrade pip > /dev/null 2>&1
-	@$(VENV_PIP) install clang-format clang-tidy cppcheck cpplint > /dev/null 2>&1
-	@printf "  $(GREEN)●$(RESET) $(BOLD)Python venv ready$(RESET)\n"
-
-shut_virt_env:
-	@if [ -d $(VENV_DIR) ]; then \
-		printf "  $(DIM)removing$(RESET)     $(YELLOW)python venv$(RESET)\n"; \
-		rm -rf $(VENV_DIR); \
-		printf "  $(GREEN)●$(RESET) $(BOLD)Python venv removed$(RESET)\n"; \
+	@if [ ! -f "$(GTEST_DIR)/lib/libgtest.a" ] || [ ! -f "$(GTEST_DIR)/lib/libgtest_main.a" ]; then \
+		printf "  $(DIM)building$(RESET)     $(YELLOW)Google Test$(RESET)\n"; \
+		cd "$(GTEST_DIR)/build" && cmake .. > /dev/null 2>&1 && $(MAKE) > /dev/null 2>&1; \
+		mkdir -p "$(GTEST_DIR)/lib"; \
+		cp "$(GTEST_DIR)/build/lib/libgtest.a" "$(GTEST_DIR)/lib/" 2>/dev/null || true; \
+		cp "$(GTEST_DIR)/build/lib/libgtest_main.a" "$(GTEST_DIR)/lib/" 2>/dev/null || true; \
 	fi
-
-diagnostic: virt_env vendor megaphone.cpp
-	@bash -c '. $(VENV_DIR)/bin/activate && python3 ../vendor/scripts/checker.py $(SRCS) -- -std=c++98 -I.'
 
 # Clean targets
-.PHONY: clean fclean re
 clean:
-	@if [ -d "$(OBJ_DIR)" ]; then \
-		printf "  $(DIM)cleaning$(RESET)     $(YELLOW)object files$(RESET)\n"; \
-		$(RM) -r $(OBJ_DIR); \
-	fi
+	@rm -rf $(OBJ_DIR)
 
-fclean:
-	@if [ -d "$(BUILD_DIR)" ]; then \
-		printf "  $(DIM)cleaning$(RESET)     $(YELLOW)build directory$(RESET)\n"; \
-		$(RM) -r $(BUILD_DIR); \
-	fi
-	@if [ -d $(VENV_DIR) ]; then \
-		printf "  $(DIM)removing$(RESET)     $(YELLOW)python venv$(RESET)\n"; \
-		$(RM) -rf $(VENV_DIR); \
-	fi
-	@if [ -d $(VENDOR_DIR) ]; then \
-		printf "  $(DIM)removing$(RESET)     $(YELLOW)vendor directory$(RESET)\n"; \
-		$(RM) -rf $(VENDOR_DIR); \
-	fi
-	@printf "  $(GREEN)●$(RESET) $(BOLD)Full clean complete$(RESET)\n"
+fclean: clean
+	@rm -rf $(BUILD_DIR)
 
 re: fclean all
 
-# Help
-.PHONY: help
-help:
-	@echo "Usage: make [all|test|clean|fclean|re|help]"
-	@echo "  all   - build main program only (no vendor deps)"
-	@echo "  test  - build and run tests (with vendor deps)"
-	@echo "  clean - remove object files"
-	@echo "  fclean- remove all build files"
-	@echo "  re    - clean and rebuild main"
+# Directory creation
+$(OBJ_DIR) $(BIN_DIR) $(OBJ_DIR)/tests:
+	@mkdir -p $@
 
-.PHONY: auto_src
+# ── Code Quality / Linting ────────────────────────────────────────────────────
 
-auto_src:
-	@srcs=`find . -maxdepth 2 -name "*.cpp" | sed 's|\./||' | tr '\n' ' ' | sed 's/ *$$//'`; \
-	sed -i.bak "/^SRCS :=.*/c\SRCS := $$srcs" Makefile; \
-	printf "  $(GREEN)●$(RESET) $(BOLD)SRCS updated in Makefile:$(RESET) SRCS := $$srcs\n"
+# Auto-injected by gen_make.py based on relative directory structures
+LINTER_SCRIPT = ../../autotools/norminette.sh
+
+norminette:
+	@printf "\n  $(BOLD)$(CYAN) Running C++ Code Quality Checks$(RESET)\n"
+	@if [ -f "$(LINTER_SCRIPT)" ]; then \
+		python3 "$(LINTER_SCRIPT)" . -- -std=c++98 -Wall -Wextra -I.; \
+	else \
+		printf "  $(RED)✘ Linter script not found at $(LINTER_SCRIPT)$(RESET)\n"; \
+	fi
+
+# Bonus: Automatically fix clang-format issues
+format:
+	@printf "\n  $(BOLD)$(CYAN) Auto-formatting C++ Source Files$(RESET)\n"
+	@if command -v clang-format >/dev/null 2>&1; then \
+		find . -name "*.cpp" -o -name "*.hpp" -o -name "*.h" -o -name "*.c" | xargs clang-format -i -style=Google; \
+		printf "  $(GREEN)●$(RESET) Files formatted successfully using Google style.\n"; \
+	else \
+		printf "  $(RED)✘ clang-format is not installed!$(RESET)\n"; \
+	fi
+
+# ── MySQLite mode (conditional) ────────────────────────────────────────────────
+sqlite: fclean
+	@printf "  $(BOLD)$(CYAN)Building with MySQLite REPL support$(RESET)\n"
+	@$(MAKE) CXXFLAGS="-std=c++98 -Wall -Wextra -Werror -DHAVE_MY_SQL_LITE=1" LDFLAGS="-lreadline" all
+
+.PHONY: all run clean fclean re test gtest norminette format sqlite

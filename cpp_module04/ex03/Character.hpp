@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/01 00:16:44 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 00:19:26 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:27:52 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #ifndef CPP_MODULE04_EX03_CHARACTER_HPP_
 #define CPP_MODULE04_EX03_CHARACTER_HPP_
 
+#include <string>
 #include "AMateria.hpp"
 #include "ICharacter.hpp"
 
@@ -34,4 +35,4 @@ class Character : public ICharacter {
   virtual void unequip(int idx);
   virtual void use(int idx, ICharacter& target);
 };
-#endif
+#endif  // CPP_MODULE04_EX03_CHARACTER_HPP_

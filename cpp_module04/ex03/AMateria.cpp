@@ -6,11 +6,13 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/01 00:15:41 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 00:15:42 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:28:15 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "AMateria.hpp"
+#include <iostream>
+#include <string>
 
 AMateria::AMateria() : type("generic") {}
 

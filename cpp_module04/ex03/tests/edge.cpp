@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/01 00:21:59 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 00:22:00 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:29:40 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,7 +127,7 @@ int main() {
             << RESET << std::endl;
   // This must DELETE Tifa's two 'cure' materias, and deeply clone Cloud's 4
   // materias!
-  *tifa = *(Character*)cloud;
+  *tifa = *reinterpret_cast<Character*>(cloud);
 
   std::cout << "Tifa after assignment uses slot 0 (Should now be Ice): ";
   tifa->use(0, *sephiroth);

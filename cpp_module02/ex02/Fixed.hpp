@@ -6,61 +6,63 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 18:42:31 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/02/28 19:18:38 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/01 17:53:57 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef FIXED_HPP
-# define FIXED_HPP
+#ifndef CPP_MODULE02_EX02_FIXED_HPP_
+#define CPP_MODULE02_EX02_FIXED_HPP_
 
-# include <iostream>
-# include <cmath>
+#include <stdint.h>
+#include <algorithm>
+#include <cmath>
+#include <iostream>
 
 class Fixed {
-private:
-    int                 _fixedPointValue;
-    static const int    _fractionalBits = 8;
+ private:
+  int _fixedPointValue;
+  static const int _fractionalBits = 8;
 
-public:
-    Fixed();
-    Fixed(const int n);
-    Fixed(const float f);
-    Fixed(const Fixed &other);
-    Fixed &operator=(const Fixed &other);
-    ~Fixed();
+ public:
+  Fixed();
+  explicit Fixed(const int n);
+  explicit Fixed(const float f);
+  Fixed(const Fixed& other);
+  Fixed& operator=(const Fixed& other);
+  ~Fixed();
 
-    int     getRawBits(void) const;
-    void    setRawBits(int const raw);
-    float   toFloat(void) const;
-    int     toInt(void) const;
+  int getRawBits(void) const;
+  void setRawBits(int const raw);
+  float toFloat(void) const;
+  int toInt(void) const;
 
-    // Comparison operators [cite: 259]
-    bool    operator>(const Fixed &other) const;
-    bool    operator<(const Fixed &other) const;
-    bool    operator>=(const Fixed &other) const;
-    bool    operator<=(const Fixed &other) const;
-    bool    operator==(const Fixed &other) const;
-    bool    operator!=(const Fixed &other) const;
+  // Comparison operators [cite: 259]
+  bool operator>(const Fixed& other) const;
+  bool operator<(const Fixed& other) const;
+  bool operator>=(const Fixed& other) const;
+  bool operator<=(const Fixed& other) const;
+  bool operator==(const Fixed& other) const;
+  bool operator!=(const Fixed& other) const;
 
-    // Arithmetic operators [cite: 260]
-    Fixed   operator+(const Fixed &other) const;
-    Fixed   operator-(const Fixed &other) const;
-    Fixed   operator*(const Fixed &other) const;
-    Fixed   operator/(const Fixed &other) const;
+  // Arithmetic operators [cite: 260]
+  Fixed operator+(const Fixed& other) const;
+  Fixed operator-(const Fixed& other) const;
+  Fixed operator*(const Fixed& other) const;
+  Fixed operator/(const Fixed& other) const;
 
-    // Increment/Decrement operators
-    Fixed&  operator++(void);       // Pre-increment
-    Fixed   operator++(int);        // Post-increment
-    Fixed&  operator--(void);       // Pre-decrement
-    Fixed   operator--(int);        // Post-decrement
+  // Increment/Decrement operators
+  Fixed& operator++(void);  // Pre-increment
+  Fixed operator++(int);    // Post-increment
+  Fixed& operator--(void);  // Pre-decrement
+  Fixed operator--(int);    // Post-decrement
 
-    // Static min/max functions [cite: 262, 263, 264, 265, 266]
-    static Fixed& min(Fixed &a, Fixed &b);
-    static const Fixed& min(const Fixed &a, const Fixed &b);
-    static Fixed& max(Fixed &a, Fixed &b);
-    static const Fixed& max(const Fixed &a, const Fixed &b);
+  // Static min/max functions [cite: 262, 263, 264, 265, 266]
+  static Fixed& min(Fixed& a, Fixed& b);
+  static const Fixed& min(const Fixed& a, const Fixed& b);
+  static Fixed& max(Fixed& a, Fixed& b);
+  static const Fixed& max(const Fixed& a, const Fixed& b);
 };
 
-std::ostream &operator<<(std::ostream &o, Fixed const &i);
+std::ostream& operator<<(std::ostream& o, Fixed const& i);
 
-#endif
+#endif  // CPP_MODULE02_EX02_FIXED_HPP_

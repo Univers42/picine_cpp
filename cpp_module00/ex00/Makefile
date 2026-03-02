@@ -16,7 +16,6 @@ SRC_LIST = megaphone.cpp
 BUILD_DIR = build
 OBJ_DIR = $(BUILD_DIR)/obj
 BIN_DIR = $(BUILD_DIR)/bin
-
 # CRITICAL FIX: Isolate the Python target injection so rules compile to the right folder
 EXEC_BIN = $(BIN_DIR)/ex00
 

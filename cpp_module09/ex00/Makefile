@@ -1,10 +1,10 @@
 # Project Configuration
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror
+CXXFLAGS = -std=c++98 -Wall -Wextra -Werror
 INC = -I.
-LDFLAGS =
-LIB_DIR =
-LIBS =
+LDFLAGS = 
+LIB_DIR = 
+LIBS = 
 
 # Add conditional -L flag only when LIB_DIR is set
 LIBDIR_FLAG := $(if $(strip $(LIB_DIR)),-L$(LIB_DIR),)
@@ -38,9 +38,6 @@ else
     GTEST_LIBS =
     GTEST_DEF = -DHAVE_GTEST=0
 endif
-
-# Checker Script
-CHECKER = @@CHECKER@@
 
 # Test Configuration
 TEST_SRCS := $(wildcard tests/*.cpp tests/*.c)
@@ -76,17 +73,6 @@ DIM = \033[2m
 GREEN = \033[92m
 CYAN = \033[96m
 YELLOW = \033[93m
-
-# ── Flag change detection ─────────────────────────────────────────────────────
-# When CXXFLAGS change (e.g. switching between make / make sqlite),
-# force a full rebuild so no stale .o files remain.
-FLAGS_FILE := $(OBJ_DIR)/.cxxflags
-CURRENT_FLAGS := $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS)
-
-ifneq ($(shell cat "$(FLAGS_FILE)" 2>/dev/null),$(CURRENT_FLAGS))
-$(shell mkdir -p $(OBJ_DIR) && printf '%s' '$(CURRENT_FLAGS)' > $(FLAGS_FILE))
-$(shell rm -f $(OBJ))
-endif
 
 # ── Main targets ──────────────────────────────────────────────────────────────
 all: $(EXEC_BIN)
@@ -177,7 +163,7 @@ LINTER_SCRIPT = ../../autotools/norminette.sh
 norminette:
 	@printf "\n  $(BOLD)$(CYAN) Running C++ Code Quality Checks$(RESET)\n"
 	@if [ -f "$(LINTER_SCRIPT)" ]; then \
-		python3 "$(LINTER_SCRIPT)" . -- -std=c++98 -Wall -Wextra -I.; \
+		python3 "$(LINTER_SCRIPT)" . -- $(CXXFLAGS) -I.; \
 	else \
 		printf "  $(RED)✘ Linter script not found at $(LINTER_SCRIPT)$(RESET)\n"; \
 	fi
@@ -195,6 +181,6 @@ format:
 # ── MySQLite mode (conditional) ────────────────────────────────────────────────
 sqlite: fclean
 	@printf "  $(BOLD)$(CYAN)Building with MySQLite REPL support$(RESET)\n"
-	@$(MAKE) CXXFLAGS="-std=c++98 -Wall -Wextra -Werror -DHAVE_MY_SQL_LITE=1" LDFLAGS="-lreadline" all
+	@$(MAKE) CXXFLAGS="$(CXXFLAGS) -DHAVE_MY_SQL_LITE=1" LDFLAGS="-lreadline" all
 
 .PHONY: all run clean fclean re test gtest norminette format sqlite

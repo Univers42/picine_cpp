@@ -56,7 +56,7 @@ def generate_makefile(
     # Default configuration
     default_config = {
         'CXX': 'c++',
-        'CXXFLAGS': '-Wall -Wextra -Werror',
+        'CXXFLAGS': '-std=c++98 -Wall -Wextra -Werror',
         'INC': '-I.', # Default include path
         'LDFLAGS': '',
         'LIB_DIR': '',
@@ -116,9 +116,8 @@ def main():
     parser.add_argument('--target', help='Target executable name')
     parser.add_argument('--src', help='Source files')
     parser.add_argument('--cxx', default='c++', help='C++ compiler')
-    parser.add_argument('--cxxflags', default='-Wall -Wextra -Werror', help='Compiler flags')
+    parser.add_argument('--cxxflags', default='-std=c++98 -Wall -Wextra -Werror', help='Compiler flags')
     parser.add_argument('--gtest-dir', help='Google Test directory')
-    parser.add_argument('--checker', help='Checker script path')
     parser.add_argument('--libcpp-dir', help='libcpp directory')
     parser.add_argument('--recursive', action='store_true', default=True,
                         help='Recursively find source files (default: True)')
@@ -178,9 +177,6 @@ def main():
 
     if args.gtest_dir:
         config['GTEST_DIR'] = args.gtest_dir
-
-    if args.checker:
-        config['CHECKER'] = args.checker
 
     if args.libcpp_dir:
         config['LIB_DIR'] = args.libcpp_dir

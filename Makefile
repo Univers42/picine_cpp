@@ -63,4 +63,7 @@ genmake:
 	fi; \
 	sh "$(CURDIR)/autotools/env.sh" autotools "$(path)"
 
-.PHONY: all clean fclean re genmake
+update_makefile:
+	find . -path './cpp_module*/ex*' -type d -not -name 'build' -not -name 'tests' -not -path '*/build/*' -not -path '*/tests/*' | sort | while read dir; do if ls "$dir"/*.cpp "$dir"/*.c 2>/dev/null | head -1 > /dev/null 2>&1; then echo "$dir"; fi; done
+
+.PHONY: all clean fclean re genmake update_makefile

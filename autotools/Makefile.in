@@ -39,9 +39,6 @@ else
     GTEST_DEF = -DHAVE_GTEST=0
 endif
 
-# Checker Script
-CHECKER = @@CHECKER@@
-
 # Test Configuration
 TEST_SRCS := $(wildcard tests/*.cpp tests/*.c)
 TEST_BINS := $(foreach f,$(TEST_SRCS),$(BIN_DIR)/$(basename $(notdir $(f))))
@@ -166,7 +163,7 @@ LINTER_SCRIPT = @@LINTER_SCRIPT@@
 norminette:
 	@printf "\n  $(BOLD)$(CYAN) Running C++ Code Quality Checks$(RESET)\n"
 	@if [ -f "$(LINTER_SCRIPT)" ]; then \
-		python3 "$(LINTER_SCRIPT)" . -- -std=c++98 -Wall -Wextra -I.; \
+		python3 "$(LINTER_SCRIPT)" . -- $(CXXFLAGS) -I.; \
 	else \
 		printf "  $(RED)✘ Linter script not found at $(LINTER_SCRIPT)$(RESET)\n"; \
 	fi
@@ -184,6 +181,6 @@ format:
 # ── MySQLite mode (conditional) ────────────────────────────────────────────────
 sqlite: fclean
 	@printf "  $(BOLD)$(CYAN)Building with MySQLite REPL support$(RESET)\n"
-	@$(MAKE) CXXFLAGS="-std=c++98 -Wall -Wextra -Werror -DHAVE_MY_SQL_LITE=1" LDFLAGS="-lreadline" all
+	@$(MAKE) CXXFLAGS="$(CXXFLAGS) -DHAVE_MY_SQL_LITE=1" LDFLAGS="-lreadline" all
 
 .PHONY: all run clean fclean re test gtest norminette format sqlite

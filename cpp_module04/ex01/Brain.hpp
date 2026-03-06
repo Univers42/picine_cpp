@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 23:54:50 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 18:14:04 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/06 19:37:54 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,11 @@
 #define RESET "\033[0m"
 #define DIM "\033[2m"
 
+/**
+ * @class Brain
+ * @brief This class exists t force us to learn the difference between 
+ * SHALLOW COPY and a DEEP COPY
+ */
 class Brain {
  public:
   std::string ideas[100];

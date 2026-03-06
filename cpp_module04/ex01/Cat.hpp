@@ -14,8 +14,12 @@
 #define CPP_MODULE04_EX01_CAT_HPP_
 
 #include "Animal.hpp"
+#include "Brain.hpp"
 
 class Cat : public Animal {
+ private:
+  Brain* _brain;
+
  public:
   Cat();
   Cat(const Cat& src);
@@ -23,6 +27,7 @@ class Cat : public Animal {
   virtual ~Cat();
 
   virtual void makeSound() const;
+  Brain* getBrain() const;
 };
 
 #endif  // CPP_MODULE04_EX01_CAT_HPP_

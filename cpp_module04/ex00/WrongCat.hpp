@@ -15,6 +15,10 @@
 
 #include "WrongAnimal.hpp"
 
+/**
+ * @class WrongCat 
+ * @breif A derived class inheriting from the flawed WrongAnimal base class.
+ */
 class WrongCat : public WrongAnimal {
  public:
   WrongCat();
@@ -22,6 +26,13 @@ class WrongCat : public WrongAnimal {
   WrongCat& operator=(const WrongCat& rhs);
   virtual ~WrongCat();
 
+  /**
+   * @brief Attempts to make a specific cat sound.
+   * because the base class Wronganimal::makeSound() is not virtual,
+   * this method onnly hides the base method (method hiding), it does not
+   * override it. It will not be called if the object is accessed via a 
+   * WrongAnimal pointer
+   */
   void makeSound() const;
 };
 

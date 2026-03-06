@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/01 00:16:46 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 17:26:45 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/06 19:42:07 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,7 @@ std::string const& Character::getName() const { return this->_name; }
 
 void Character::equip(AMateria* m) {
   if (!m) return;
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 5; i++) {
     if (this->_inventory[i] == NULL) {
       this->_inventory[i] = m;
       return;

@@ -6,7 +6,7 @@
 /*   By: dlesieur <dlesieur@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/28 23:48:46 by dlesieur          #+#    #+#             */
-/*   Updated: 2026/03/01 18:13:28 by dlesieur         ###   ########.fr       */
+/*   Updated: 2026/03/06 15:12:56 by dlesieur         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 #include <iostream>
 
 Cat::Cat() : Animal() {
-  this->type = "Cat";  // Set type to Cat
+  this->type = "Cat";
   std::cout << GREEN << "Cat default constructor called" << RESET << std::endl;
 }
 

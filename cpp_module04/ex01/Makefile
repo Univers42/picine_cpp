@@ -10,7 +10,7 @@ LIBS =
 LIBDIR_FLAG := $(if $(strip $(LIB_DIR)),-L$(LIB_DIR),)
 
 # Source files (auto-detected or provided)
-SRC_LIST = Animal.cpp Brain.cpp Cat.cpp Dog.cpp WrongAnimal.cpp WrongCat.cpp main.cpp
+SRC_LIST = Animal.cpp Brain.cpp Cat.cpp Dog.cpp WrongAnimal.cpp WrongCat.cpp postman.cpp main.cpp
 
 # Build directories
 BUILD_DIR = build

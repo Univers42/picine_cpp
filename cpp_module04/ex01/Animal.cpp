@@ -14,6 +14,14 @@
 
 #include <iostream>
 #include <string>
+
+/**
+ * NOTICE: The virtual key doens't appear from the .cpp because it's a 
+ * declaration specifier. it belogs only in the .hpp putting it into the
+ * *.cpp will throw an error
+ */
+// throw the assignment by default of animal throwed into the list memnber
+// initializer
 Animal::Animal() : type("Generic Animal") {
   std::cout << GREEN << "Animal default constructor called" << RESET
             << std::endl;
@@ -23,9 +31,11 @@ Animal::Animal(const Animal& src) : type(src.type) {
   std::cout << YELLOW << "Animal copy constructor called" << RESET << std::endl;
 }
 
+// assignmen operator
 Animal& Animal::operator=(const Animal& rhs) {
   std::cout << BLUE << "Animal assignment operator called" << RESET
             << std::endl;
+  // Self assignment Guard          
   if (this != &rhs) {
     this->type = rhs.type;
   }

@@ -11,28 +11,29 @@
 /* ************************************************************************** */
 
 #include "Dog.hpp"
+#include "Logger.hpp"
 #include <iostream>
 
 Dog::Dog() : Animal() {
   this->type = "Dog";
-  std::cout << GREEN << "Dog default constructor called" << RESET << std::endl;
+  LOG_CTOR();
 }
 
 Dog::Dog(const Dog& src) : Animal(src) {
-  std::cout << YELLOW << "Dog copy constructor called" << RESET << std::endl;
+  LOG_COPY();
+  *this = src;
 }
 
 Dog& Dog::operator=(const Dog& rhs) {
-  std::cout << BLUE << "Dog assignment operator called" << RESET << std::endl;
+  LOG_ASSIGN();
   if (this != &rhs) {
-    Animal::operator=(rhs);
     this->type = rhs.type;
   }
   return *this;
 }
 
 Dog::~Dog() {
-  std::cout << RED << "Dog destructor called" << RESET << std::endl;
+  LOG_DTOR();
 }
 
 void Dog::makeSound() const { std::cout << "Woof! Woof! Bark!" << std::endl; }

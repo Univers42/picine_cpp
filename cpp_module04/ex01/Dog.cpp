@@ -11,24 +11,23 @@
 /* ************************************************************************** */
 
 #include "Dog.hpp"
+#include "Logger.hpp"
 
 #include <iostream>
 
 Dog::Dog() : Animal() {
   this->type = "Dog";
   this->_brain = new Brain();
-  std::cout << GREEN << "Dog default constructor called" << RESET << std::endl;
+  LOG_CTOR();
 }
 
 Dog::Dog(const Dog& src) : Animal(src) {
   this->_brain = new Brain(*src._brain);
-  std::cout << YELLOW << "Dog deep-copy constructor called" << RESET
-            << std::endl;
+  LOG_COPY();
 }
 
 Dog& Dog::operator=(const Dog& rhs) {
-  std::cout << BLUE << "Dog deep-copy assignment operator called" << RESET
-            << std::endl;
+  LOG_ASSIGN();
   if (this != &rhs) {
     Animal::operator=(rhs);
     delete this->_brain;
@@ -39,7 +38,7 @@ Dog& Dog::operator=(const Dog& rhs) {
 
 Dog::~Dog() {
   delete this->_brain;
-  std::cout << RED << "Dog destructor called" << RESET << std::endl;
+  LOG_DTOR();
 }
 
 void Dog::makeSound() const { std::cout << "Woof! Woof! Bark!" << std::endl; }

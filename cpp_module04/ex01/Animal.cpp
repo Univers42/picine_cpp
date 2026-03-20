@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "Animal.hpp"
+#include "Logger.hpp"
 
 #include <iostream>
 #include <string>
@@ -23,18 +24,17 @@
 // throw the assignment by default of animal throwed into the list memnber
 // initializer
 Animal::Animal() : type("Generic Animal") {
-  std::cout << GREEN << "Animal default constructor called" << RESET
-            << std::endl;
+  LOG_CTOR();
 }
 
+
 Animal::Animal(const Animal& src) : type(src.type) {
-  std::cout << YELLOW << "Animal copy constructor called" << RESET << std::endl;
+  LOG_COPY();
 }
 
 // assignmen operator
 Animal& Animal::operator=(const Animal& rhs) {
-  std::cout << BLUE << "Animal assignment operator called" << RESET
-            << std::endl;
+  LOG_ASSIGN();
   // Self assignment Guard          
   if (this != &rhs) {
     this->type = rhs.type;
@@ -43,7 +43,7 @@ Animal& Animal::operator=(const Animal& rhs) {
 }
 
 Animal::~Animal() {
-  std::cout << RED << "Animal destructor called" << RESET << std::endl;
+  LOG_DTOR();
 }
 
 std::string Animal::getType() const { return this->type; }

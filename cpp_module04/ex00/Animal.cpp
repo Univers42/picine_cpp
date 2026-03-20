@@ -11,33 +11,32 @@
 /* ************************************************************************** */
 
 #include "Animal.hpp"
+#include "Logger.hpp"
 #include <iostream>
 #include <string>
 
 Animal::Animal() : type("Generic Animal") {
-  std::cout << GREEN << "Animal default constructor called" << RESET
-            << std::endl;
+    LOG_CTOR();
 }
 
 Animal::Animal(const Animal& src) : type(src.type) {
-  std::cout << YELLOW << "Animal copy constructor called" << RESET << std::endl;
+    LOG_COPY();
 }
 
 Animal& Animal::operator=(const Animal& rhs) {
-  std::cout << BLUE << "Animal assignment operator called" << RESET
-            << std::endl;
-  if (this != &rhs) {
-    this->type = rhs.type;
-  }
-  return *this;
+    LOG_ASSIGN();
+    if (this != &rhs) {
+        this->type = rhs.type;
+    }
+    return *this;
 }
 
 Animal::~Animal() {
-  std::cout << RED << "Animal destructor called" << RESET << std::endl;
+    LOG_DTOR();
 }
 
 std::string Animal::getType() const { return this->type; }
 
 void Animal::makeSound() const {
-  std::cout << "* Unidentifiable generic animal noise *" << std::endl;
+    LOG_METHOD("makeSound() called - unidentifiable noise");
 }

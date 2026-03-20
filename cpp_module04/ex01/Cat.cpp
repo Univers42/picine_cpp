@@ -11,22 +11,23 @@
 /* ************************************************************************** */
 
 #include "Cat.hpp"
+#include "Logger.hpp"
 
 #include <iostream>
 
 Cat::Cat() : Animal() {
   this->type = "Cat";
   this->_brain = new Brain();
-  std::cout << GREEN << "Cat default constructor called" << RESET << std::endl;
+  LOG_CTOR();
 }
 
 Cat::Cat(const Cat& src) : Animal(src) {
   this->_brain = new Brain(*src._brain);
-  std::cout << YELLOW << "Cat deep-copy constructor called" << RESET << std::endl;
+  LOG_COPY();
 }
 
 Cat& Cat::operator=(const Cat& rhs) {
-  std::cout << BLUE << "Cat deep-copy assignment operator called" << RESET << std::endl;
+  LOG_ASSIGN();
   if (this != &rhs) {
     Animal::operator=(rhs);
     delete this->_brain;
@@ -37,7 +38,7 @@ Cat& Cat::operator=(const Cat& rhs) {
 
 Cat::~Cat() {
   delete this->_brain;
-  std::cout << RED << "Cat destructor called" << RESET << std::endl;
+  LOG_DTOR();
 }
 
 void Cat::makeSound() const {

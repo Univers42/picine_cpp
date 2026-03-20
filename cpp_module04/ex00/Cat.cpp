@@ -11,28 +11,29 @@
 /* ************************************************************************** */
 
 #include "Cat.hpp"
+#include "Logger.hpp"
 #include <iostream>
 
 Cat::Cat() : Animal() {
   this->type = "Cat";
-  std::cout << GREEN << "Cat default constructor called" << RESET << std::endl;
+  LOG_CTOR();
 }
 
 Cat::Cat(const Cat& src) : Animal(src) {
-  std::cout << YELLOW << "Cat copy constructor called" << RESET << std::endl;
+  LOG_COPY();
+  *this = src;
 }
 
 Cat& Cat::operator=(const Cat& rhs) {
-  std::cout << BLUE << "Cat assignment operator called" << RESET << std::endl;
+  LOG_ASSIGN();
   if (this != &rhs) {
-    Animal::operator=(rhs);
     this->type = rhs.type;
   }
   return *this;
 }
 
 Cat::~Cat() {
-  std::cout << RED << "Cat destructor called" << RESET << std::endl;
+  LOG_DTOR();
 }
 
 void Cat::makeSound() const {

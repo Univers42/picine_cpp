@@ -11,24 +11,23 @@
 /* ************************************************************************** */
 
 #include "Brain.hpp"
+#include "Logger.hpp"
 
 #include <iostream>
 
 Brain::Brain() {
-  std::cout << DIM << "    Brain default constructor called" << RESET
-            << std::endl;
+  LOG_CTOR();
 }
 
 Brain::Brain(const Brain& src) {
-  std::cout << DIM << "    Brain copy constructor called" << RESET << std::endl;
+  LOG_COPY();
   for (int i = 0; i < 100; ++i) {
     this->ideas[i] = src.ideas[i];
   }
 }
 
 Brain& Brain::operator=(const Brain& rhs) {
-  std::cout << DIM << "    Brain assignment operator called" << RESET
-            << std::endl;
+  LOG_ASSIGN();
   if (this != &rhs) {
     for (int i = 0; i < 100; ++i) {
       this->ideas[i] = rhs.ideas[i];
@@ -38,5 +37,5 @@ Brain& Brain::operator=(const Brain& rhs) {
 }
 
 Brain::~Brain() {
-  std::cout << DIM << "    Brain destructor called" << RESET << std::endl;
+  LOG_DTOR();
 }
